@@ -1,5 +1,5 @@
 {
-    "name": "rtippin/janus-gateway",
+    "name": "rtippin/janus-client",
     "description": "Janus Gateway Client",
     "license": "MIT",
     "authors": [
@@ -9,7 +9,7 @@
             "homepage": "https://tippindev.com"
         }
     ],
-    "homepage": "https://github.com/rtippin/janus-gateway",
+    "homepage": "https://github.com/rtippin/janus-client",
     "keywords": [
         "Laravel",
         "Janus",

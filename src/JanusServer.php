@@ -16,12 +16,12 @@ class JanusServer
     /**
      * @var string
      */
-    private string $janusServer;
+    private string $janusServerEndpoint;
 
     /**
      * @var string
      */
-    private string $janusAdminServer;
+    private string $janusAdminServerEndpoint;
 
     /**
      * @var string
@@ -32,11 +32,6 @@ class JanusServer
      * @var bool
      */
     private bool $selfSigned;
-
-    /**
-     * @var null|int|float
-     */
-    private $pingPong = null;
 
     /**
      * @var null|int|float
@@ -79,8 +74,8 @@ class JanusServer
     public function __construct()
     {
         $this->apiSecret = config('janus.api_secret');
-        $this->janusServer = config('janus.server_endpoint');
-        $this->janusAdminServer = config('janus.server_admin_endpoint');
+        $this->janusServerEndpoint = config('janus.server_endpoint');
+        $this->janusAdminServerEndpoint = config('janus.server_admin_endpoint');
         $this->selfSigned = config('janus.backend_ssl');
     }
 
@@ -121,44 +116,6 @@ class JanusServer
     }
 
     /**
-     * Retrieve the janus server instance details.
-     *
-     * @return array
-     */
-    public function serverInfo(): array
-    {
-        $this->janusAPI(null, 'info', false, false);
-
-        return $this->apiResponse;
-    }
-
-    /**
-     * Ping janus to see if it is alive.
-     *
-     * @return array
-     */
-    public function serverPing(): array
-    {
-        $this->janusAPI([
-            'janus' => 'ping',
-            'transaction' => Str::random(12),
-        ], null, true);
-
-        if (isset($this->apiResponse['janus'])
-            && $this->apiResponse['janus'] === 'pong') {
-            return [
-                'pong' => true,
-                'latency' => $this->lastLatency,
-                'message' => $this->lastLatency.' milliseconds',
-            ];
-        }
-
-        return [
-            'pong' => false,
-        ];
-    }
-
-    /**
      * Set the Janus configs defaulted in the constructor and class properties
      * Use property name as key => value.
      *
@@ -179,19 +136,6 @@ class JanusServer
     }
 
     /**
-     * Easily set debug at any part of a chain.
-     *
-     * @param bool $debug
-     * @return $this
-     */
-    public function debug(bool $debug = true): self
-    {
-        $this->debug = $debug;
-
-        return $this;
-    }
-
-    /**
      * Return the response from a plugin.
      *
      * @return array
@@ -199,160 +143,6 @@ class JanusServer
     public function getPluginResponse(): array
     {
         return $this->pluginResponse;
-    }
-
-    /**
-     * Connect with janus to set the session ID for this cycle.
-     *
-     * @return $this
-     */
-    public function connect(): self
-    {
-        $this->janusAPI([
-            'janus' => 'create',
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
-
-        $this->sessionId = $this->apiResponse['data']['id'] ?? null;
-
-        return $this;
-    }
-
-    /**
-     * Attach to the janus plugin to get a handle ID. All request
-     * in this cycle will go to this plugin unless you call detach.
-     *
-     * @param string $plugin
-     * @return $this
-     */
-    public function attach(string $plugin): self
-    {
-        $this->plugin = $plugin;
-
-        if (! $this->sessionId || $this->handleId) {
-            return $this;
-        }
-
-        $this->janusAPI([
-            'janus' => 'attach',
-            'plugin' => $plugin,
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
-
-        if (isset($this->apiResponse['data']['id'])) {
-            $this->handleId = $this->apiResponse['data']['id'];
-        } else {
-            $this->handleId = null;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Detach from the current plugin/handle.
-     *
-     * @return $this
-     */
-    public function detach(): self
-    {
-        if (! $this->handleId) {
-            return $this;
-        }
-
-        $this->janusAPI([
-            'janus' => 'detach',
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
-
-        $this->handleId = null;
-
-        return $this;
-    }
-
-    /**
-     * Disconnect from janus, destroying our session and handle/plugin.
-     *
-     * @return $this
-     */
-    public function disconnect(): self
-    {
-        $this->handleId = null;
-
-        if (! $this->sessionId) {
-            return $this;
-        }
-
-        $this->janusAPI([
-            'janus' => 'destroy',
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
-
-        $this->sessionId = null;
-
-        return $this;
-    }
-
-    /**
-     * Send janus our message to the plugin.
-     *
-     * @param array $message
-     * @param string|null $jsep
-     * @return $this
-     */
-    public function sendMessage(array $message, string $jsep = null): self
-    {
-        $this->pluginPayload = [
-            'janus' => 'message',
-            'body' => $message,
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ];
-
-        if ($jsep) {
-            array_push($this->pluginPayload, ['jsep' => $jsep]);
-        }
-
-        if (! $this->sessionId
-            || ! $this->handleId
-            || ! $this->plugin) {
-            $this->pluginResponse = [];
-
-            return $this;
-        }
-
-        $this->janusAPI($this->pluginPayload)->setPluginResponse();
-
-        return $this;
-    }
-
-    /**
-     * Send janus our trickle.
-     * @param string $candidate
-     * @return $this
-     */
-    public function sendTrickleCandidate(string $candidate): self
-    {
-        if (! $this->sessionId || ! $this->handleId) {
-            $this->pluginResponse = [];
-            $this->pluginPayload = [];
-
-            return $this;
-        }
-
-        $this->pluginPayload = [
-            'janus' => 'trickle',
-            'candidate' => $candidate,
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ];
-
-        $this->janusAPI($this->pluginPayload)->setPluginResponse();
-
-        return $this;
     }
 
     /**
@@ -369,7 +159,7 @@ class JanusServer
                               bool $admin = false,
                               bool $post = true): self
     {
-        if (! $this->janusServer) {
+        if (! $this->janusServerEndpoint) {
             return $this;
         }
 
@@ -378,7 +168,7 @@ class JanusServer
             'timeout' => 30,
         ]);
 
-        $server = $admin ? $this->janusAdminServer : $this->janusServer;
+        $server = $admin ? $this->janusAdminServerEndpoint : $this->janusServerEndpoint;
         $route = $route ? '/'.$route : '';
         $session = $this->sessionId ? '/'.$this->sessionId : '';
         $handle = $this->handleId ? '/'.$this->handleId : '';
