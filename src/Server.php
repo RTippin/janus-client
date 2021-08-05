@@ -48,6 +48,11 @@ class Server
     private ?string $handleId = null;
 
     /**
+     * @var string|null
+     */
+    private ?string $plugin = null;
+
+    /**
      * @var array|null
      */
     private ?array $apiPayload = null;
@@ -103,7 +108,7 @@ class Server
 
     /**
      * @param string|null $sessionId
-     * @return Server
+     * @return $this
      */
     public function setSessionId(?string $sessionId): self
     {
@@ -114,13 +119,32 @@ class Server
 
     /**
      * @param string|null $handleId
-     * @return Server
+     * @return $this
      */
     public function setHandleId(?string $handleId): self
     {
         $this->handleId = $handleId;
 
         return $this;
+    }
+
+    /**
+     * @param string|null $plugin
+     * @return $this
+     */
+    public function setPlugin(?string $plugin): self
+    {
+        $this->plugin = $plugin;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPlugin(): ?string
+    {
+        return $this->plugin;
     }
 
     /**
@@ -164,6 +188,14 @@ class Server
         }
 
         return $this->apiResponse;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAttached(): bool
+    {
+        return ! is_null($this->handleId) && ! is_null($this->plugin);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace RTippin\Janus\Plugins;
 
 use Illuminate\Support\Str;
+use RTippin\Janus\Janus;
 
 class VideoRoom
 {
@@ -13,66 +14,83 @@ class VideoRoom
     const PLUGIN = 'janus.plugin.videoroom';
 
     /**
-     * @var string
+     * @var Janus
      */
-    private string $PLUGIN_ADMIN_KEY;
+    private Janus $janus;
 
     /**
-     * @var JanusServer
+     * @var string|null
      */
-    private JanusServer $janus;
+    private ?string $adminKey;
+
+    /**
+     * @var bool
+     */
+    private bool $shouldDisconnect = true;
 
     /**
      * VideoRoom constructor.
      *
-     * @param JanusServer $janus
+     * @param Janus $janus
      */
-    public function __construct(JanusServer $janus)
+    public function __construct(Janus $janus)
     {
         $this->janus = $janus;
-        $this->PLUGIN_ADMIN_KEY = config('janus.video_room_secret');
+        $this->setAdminKey(config('janus.video_room_secret'));
     }
 
     /**
-     * Create our initial session and handle for this plugin.
-     *
-     * @return JanusServer
+     * @return Janus
      */
-    private function setup(): JanusServer
+    public function janus(): Janus
     {
-        return $this->janus->connect()->attach(self::PLUGIN);
+        return $this->janus;
     }
 
     /**
-     * Check if the plugin response we expect is valid.
-     *
-     * @param string $success
-     * @return bool
+     * @param string|null $adminKey
+     * @return $this
      */
-    private function isValidPluginResponse(string $success = 'success'): bool
+    public function setAdminKey(?string $adminKey): self
     {
-        return isset($this->janus->getPluginResponse()['videoroom'])
-            && $this->janus->getPluginResponse()['videoroom'] === $success;
+        $this->adminKey = $adminKey;
+
+        return $this;
+    }
+
+    /**
+     * If you want to call to multiple methods within one request cycle, this
+     * disables automatically disconnecting, resulting in less request in the
+     * cycle to the janus server. When you are done, you must manually call to
+     * the disconnect method with force set to true.
+     *
+     * @return $this
+     */
+    public function withoutDisconnect(): self
+    {
+        $this->shouldDisconnect = false;
+
+        return $this;
     }
 
     /**
      * List all Video Rooms we have in this janus server.
      *
-     * @return array
+     * @return array|null
      */
-    public function list(): array
+    public function list(): ?array
     {
-        $this->setup()->sendMessage([
-            'request' => 'list',
-        ])->disconnect();
+        $this->emit(['request' => 'list']);
 
-        if ($this->isValidPluginResponse()) {
-            return $this->janus->getPluginResponse()['list'];
+        if (! $this->isValidPluginResponse()) {
+            //TODO.
         }
 
-        $this->janus->logPluginError('list');
+        $list = $this->janus->server()->getPluginResponse('list');
 
-        return [];
+        $this->disconnect();
+
+        return $list;
     }
 
     /**
@@ -83,38 +101,35 @@ class VideoRoom
      */
     public function exists(int $room): bool
     {
-        $this->setup()->sendMessage([
+        $this->emit([
             'request' => 'exists',
             'room' => $room,
-        ])->disconnect();
+        ]);
 
-        if ($this->isValidPluginResponse()) {
-            return $this->janus->getPluginResponse()['exists'];
+        if (! $this->isValidPluginResponse()) {
+            //TODO.
         }
 
-        $this->janus->logPluginError('exists');
+        $exists = $this->janus->server()->getPluginResponse('exists') ?? false;
 
-        return false;
+        $this->disconnect();
+
+        return $exists;
     }
 
     /**
-     * Create a new video room, set flags to override defaults
-     * ex: ['publishers' => 10, 'bitrate' => 1024000].
+     * Create a new video room, overriding params you want to set.
      *
      * @param array $params
-     * @param bool $pin
-     * @param bool $secret
-     * @return array
+     * @param bool $usePin
+     * @param bool $useSecret
+     * @return array|null
      */
     public function create(array $params = [],
-                           bool $pin = true,
-                           bool $secret = true): array
+                           bool $usePin = true,
+                           bool $useSecret = true): ?array
     {
-        $make_pin = $pin ? Str::random(6) : '';
-
-        $make_secret = $secret ? Str::random(12) : '';
-
-        $create = [
+        $payload = array_merge([
             'request' => 'create',
             'publishers' => 2,
             'description' => Str::random(10),
@@ -124,30 +139,28 @@ class VideoRoom
             'audio_level_average' => 25,
             'notify_joining' => true,
             'bitrate' => 600000,
-            'pin' => $make_pin,
-            'secret' => $make_secret,
-            'admin_key' => $this->PLUGIN_ADMIN_KEY,
+            'pin' => $usePin ? Str::random(6) : '',
+            'secret' => $useSecret ? Str::random(12) : '',
+            'admin_key' => $this->adminKey,
+        ], $params);
+
+        $this->emit($payload);
+
+        if (! $this->isValidPluginResponse('created')) {
+            //TODO.
+
+            $this->disconnect();
+
+            return null;
+        }
+
+        $this->disconnect();
+
+        return [
+            'room' => $this->janus->server()->getPluginResponse('room'),
+            'pin' => $payload['pin'] ?: null,
+            'secret' => $payload['secret'] ?: null,
         ];
-
-        if (count($params)) {
-            foreach ($params as $key => $value) {
-                $create[$key] = $value;
-            }
-        }
-
-        $this->setup()->sendMessage($create)->disconnect();
-
-        if ($this->isValidPluginResponse('created')) {
-            return [
-                'room' => $this->janus->getPluginResponse()['room'],
-                'pin' => $pin ? $make_pin : null,
-                'secret' => $secret ? $make_secret : null,
-            ];
-        }
-
-        $this->janus->logPluginError('create');
-
-        return [];
     }
 
     /**
@@ -288,5 +301,61 @@ class VideoRoom
         ]);
 
         return false;
+    }
+
+    /**
+     * Create our initial session and handle for this plugin.
+     *
+     * @return Janus
+     */
+    private function setup(): Janus
+    {
+        return $this->janus->connect()->attach(self::PLUGIN);
+    }
+
+    /**
+     * Emit our message, initiating a connection/attachment if needed.
+     *
+     * @param array $message
+     */
+    private function emit(array $message): void
+    {
+        if ($this->janus->server()->isAttached()
+            && $this->janus->server()->getPlugin() === self::PLUGIN) {
+            $this->janus->message($message);
+
+            return;
+        }
+
+        $this->janus
+            ->connect()
+            ->attach(self::PLUGIN)
+            ->message($message);
+    }
+
+    /**
+     * Disconnect from the server if enabled or forced.
+     *
+     * @param bool $force
+     * @return $this
+     */
+    public function disconnect(bool $force = false): self
+    {
+        if ($this->shouldDisconnect || $force) {
+            $this->janus->disconnect();
+        }
+
+        return $this;
+    }
+
+    /**
+     * Check if the plugin response we expect is valid.
+     *
+     * @param string $success
+     * @return bool
+     */
+    private function isValidPluginResponse(string $success = 'success'): bool
+    {
+        return $this->janus->server()->getPluginResponse('videoroom') === $success;
     }
 }

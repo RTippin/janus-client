@@ -91,7 +91,7 @@ class Janus
      */
     public function attach(string $plugin): self
     {
-        $this->server->post([
+        $this->server->setPlugin($plugin)->post([
             'janus' => 'attach',
             'plugin' => $plugin,
         ]);
@@ -112,7 +112,7 @@ class Janus
     {
         $this->server->post(['janus' => 'detach']);
 
-        $this->server->setHandleId(null);
+        $this->server->setPlugin(null)->setHandleId(null);
 
         return $this;
     }
@@ -124,7 +124,7 @@ class Janus
      */
     public function disconnect(): self
     {
-        $this->server->setHandleId(null);
+        $this->server->setPlugin(null)->setHandleId(null);
 
         $this->server->post(['janus' => 'destroy']);
 
