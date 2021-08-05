@@ -73,7 +73,7 @@ class Janus
      */
     public function connect(): self
     {
-        $this->server->post(['janus' => 'create']);
+        $this->server->setSessionId(null)->post(['janus' => 'create']);
 
         $this->server->setSessionId(
             $this->server->getApiResponse('data')['id'] ?? null
