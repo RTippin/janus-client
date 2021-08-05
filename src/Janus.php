@@ -2,19 +2,22 @@
 
 namespace RTippin\Janus;
 
-use Illuminate\Support\Str;
-
+/**
+ * Laravel Janus Media Server REST interface client.
+ * Created by: Richard Tippin.
+ * @link https://janus.conf.meetecho.com/docs/rest.html.
+ */
 class Janus
 {
     /**
-     * @var JanusServer
+     * @var Server
      */
-    private JanusServer $server;
+    private Server $server;
 
     /**
      * Janus constructor.
      */
-    public function __construct(JanusServer $server)
+    public function __construct(Server $server)
     {
         $this->server = $server;
 
@@ -22,6 +25,14 @@ class Janus
             ->setAdminServerEndpoint(config('janus.server_admin_endpoint'))
             ->setSelfSigned(config('janus.backend_ssl'))
             ->setApiSecret(config('janus.api_secret'));
+    }
+
+    /**
+     * @return Server
+     */
+    public function server(): Server
+    {
+        return $this->server;
     }
 
     /**
@@ -56,50 +67,38 @@ class Janus
     }
 
     /**
-     * Connect with janus to set the session ID for this cycle.
+     * Connect with janus to set the session ID for this request cycle.
      *
      * @return $this
      */
     public function connect(): self
     {
-        $this->janusAPI([
-            'janus' => 'create',
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
+        $this->server->post(['janus' => 'create']);
 
-        $this->sessionId = $this->apiResponse['data']['id'] ?? null;
+        $this->server->setSessionId(
+            $this->server->getApiResponse('data')['id'] ?? null
+        );
 
         return $this;
     }
 
     /**
-     * Attach to the janus plugin to get a handle ID. All request
-     * in this cycle will go to this plugin unless you call detach.
+     * Attach to the janus plugin to get a handle ID. All api calls in this
+     * request cycle will go to this plugin unless you call detach.
      *
      * @param string $plugin
      * @return $this
      */
     public function attach(string $plugin): self
     {
-        $this->plugin = $plugin;
-
-        if (! $this->sessionId || $this->handleId) {
-            return $this;
-        }
-
-        $this->janusAPI([
+        $this->server->post([
             'janus' => 'attach',
             'plugin' => $plugin,
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
         ]);
 
-        if (isset($this->apiResponse['data']['id'])) {
-            $this->handleId = $this->apiResponse['data']['id'];
-        } else {
-            $this->handleId = null;
-        }
+        $this->server->setHandleId(
+            $this->server->getApiResponse('data')['id'] ?? null
+        );
 
         return $this;
     }
@@ -111,17 +110,9 @@ class Janus
      */
     public function detach(): self
     {
-        if (! $this->handleId) {
-            return $this;
-        }
+        $this->server->post(['janus' => 'detach']);
 
-        $this->janusAPI([
-            'janus' => 'detach',
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
-
-        $this->handleId = null;
+        $this->server->setHandleId(null);
 
         return $this;
     }
@@ -133,52 +124,34 @@ class Janus
      */
     public function disconnect(): self
     {
-        $this->handleId = null;
+        $this->server->setHandleId(null);
 
-        if (! $this->sessionId) {
-            return $this;
-        }
+        $this->server->post(['janus' => 'destroy']);
 
-        $this->janusAPI([
-            'janus' => 'destroy',
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ]);
-
-        $this->sessionId = null;
+        $this->server->setSessionId(null);
 
         return $this;
     }
 
     /**
-     * Send janus our message to the plugin.
+     * Send janus our message.
      *
      * @param array $message
      * @param string|null $jsep
      * @return $this
      */
-    public function sendMessage(array $message, string $jsep = null): self
+    public function message(array $message, ?string $jsep = null): self
     {
-        $this->pluginPayload = [
+        $payload = [
             'janus' => 'message',
             'body' => $message,
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
         ];
 
-        if ($jsep) {
-            array_push($this->pluginPayload, ['jsep' => $jsep]);
+        if (! is_null($jsep)) {
+            array_push($payload, ['jsep' => $jsep]);
         }
 
-        if (! $this->sessionId
-            || ! $this->handleId
-            || ! $this->plugin) {
-            $this->pluginResponse = [];
-
-            return $this;
-        }
-
-        $this->janusAPI($this->pluginPayload)->setPluginResponse();
+        $this->server->post($payload);
 
         return $this;
     }
@@ -188,23 +161,12 @@ class Janus
      * @param string $candidate
      * @return $this
      */
-    public function sendTrickleCandidate(string $candidate): self
+    public function trickleCandidate(string $candidate): self
     {
-        if (! $this->sessionId || ! $this->handleId) {
-            $this->pluginResponse = [];
-            $this->pluginPayload = [];
-
-            return $this;
-        }
-
-        $this->pluginPayload = [
+        $this->server->post([
             'janus' => 'trickle',
             'candidate' => $candidate,
-            'transaction' => Str::random(12),
-            'apisecret' => $this->apiSecret,
-        ];
-
-        $this->janusAPI($this->pluginPayload)->setPluginResponse();
+        ]);
 
         return $this;
     }

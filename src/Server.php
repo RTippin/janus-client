@@ -5,11 +5,7 @@ namespace RTippin\Janus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-/**
- * Janus Media Server REST interface
- * https://janus.conf.meetecho.com/docs/rest.html.
- */
-class JanusServer
+class Server
 {
     /**
      * @var string
@@ -50,11 +46,6 @@ class JanusServer
      * @var null|string
      */
     private ?string $handleId = null;
-
-    /**
-     * @var null|string
-     */
-    private ?string $plugin = null;
 
     /**
      * @var array|null
@@ -112,7 +103,7 @@ class JanusServer
 
     /**
      * @param string|null $sessionId
-     * @return JanusServer
+     * @return Server
      */
     public function setSessionId(?string $sessionId): self
     {
@@ -123,37 +114,13 @@ class JanusServer
 
     /**
      * @param string|null $handleId
-     * @return JanusServer
+     * @return Server
      */
     public function setHandleId(?string $handleId): self
     {
         $this->handleId = $handleId;
 
         return $this;
-    }
-
-    /**
-     * @param string|null $plugin
-     * @return $this
-     */
-    public function setPlugin(?string $plugin): self
-    {
-        $this->plugin = $plugin;
-
-        return $this;
-    }
-
-    /**
-     * @param string|null $key
-     * @return array|string|null
-     */
-    public function getApiResponse(?string $key = null)
-    {
-        if (! is_null($key)) {
-            return $this->apiResponse[$key] ?? null;
-        }
-
-        return $this->apiResponse;
     }
 
     /**
@@ -175,19 +142,28 @@ class JanusServer
     /**
      * Return the response from a plugin.
      *
-     * @return array
+     * @return mixed|null
      */
-    public function getPluginResponse(): array
+    public function getPluginResponse(?string $key = null)
     {
-        if (isset($this->apiResponse['plugindata']['plugin'])
-            && $this->apiResponse['plugindata']['plugin'] === $this->plugin
-            && isset($this->apiResponse['plugindata']['data'])) {
-            $this->pluginResponse = $this->apiResponse['plugindata']['data'];
-        } else {
-            $this->pluginResponse = [];
+        if (! is_null($key)) {
+            return $this->apiResponse['plugindata']['data'][$key] ?? null;
         }
 
-        return $this->pluginResponse;
+        return $this->apiResponse['plugindata']['data'] ?? null;
+    }
+
+    /**
+     * @param string|null $key
+     * @return mixed|null
+     */
+    public function getApiResponse(?string $key = null)
+    {
+        if (! is_null($key)) {
+            return $this->apiResponse[$key] ?? null;
+        }
+
+        return $this->apiResponse;
     }
 
     /**
@@ -269,10 +245,10 @@ class JanusServer
      */
     private function checkForResponseError(string $uri): void
     {
-        if (! isset($this->apiResponse['janus'])
-            || $this->apiResponse['janus'] === 'error') {
-            //TODO.
-        }
+//        if (! isset($this->apiResponse['janus'])
+//            || $this->apiResponse['janus'] === 'error') {
+//            //TODO.
+//        }
     }
 
     /**
