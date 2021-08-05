@@ -1,20 +1,21 @@
 <?php
 
-namespace RTippin\MessengerBots\Tests;
+namespace RTippin\Janus\Tests;
 
 use Orchestra\Testbench\TestCase;
+use RTippin\Janus\JanusServiceProvider;
 
 class JanusTestCase extends TestCase
 {
     protected function getPackageProviders($app): array
     {
-        return [];
+        return [
+            JanusServiceProvider::class,
+        ];
     }
 
     protected function getEnvironmentSetUp($app): void
     {
-        $config = $app->get('config');
-
-        $config->set('janus.enabled', true);
+        //
     }
 }
