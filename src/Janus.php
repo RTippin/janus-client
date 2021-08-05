@@ -17,18 +17,21 @@ class Janus
     public function __construct(JanusServer $server)
     {
         $this->server = $server;
+
+        $this->server->setServerEndpoint(config('janus.server_endpoint'))
+            ->setAdminServerEndpoint(config('janus.server_admin_endpoint'))
+            ->setSelfSigned(config('janus.backend_ssl'))
+            ->setApiSecret(config('janus.api_secret'));
     }
 
     /**
      * Retrieve the janus server instance details.
      *
-     * @return array
+     * @return array|null
      */
-    public function serverInfo(): array
+    public function info(): ?array
     {
-        $this->janusAPI(null, 'info', false, false);
-
-        return $this->apiResponse;
+        return $this->server->get('info');
     }
 
     /**
@@ -36,19 +39,14 @@ class Janus
      *
      * @return array
      */
-    public function serverPing(): array
+    public function ping(): array
     {
-        $this->janusAPI([
-            'janus' => 'ping',
-            'transaction' => Str::random(12),
-        ], null, true);
+        $this->server->post(['janus' => 'ping']);
 
-        if (isset($this->apiResponse['janus'])
-            && $this->apiResponse['janus'] === 'pong') {
+        if ($this->server->getApiResponse('janus') === 'pong') {
             return [
                 'pong' => true,
-                'latency' => $this->lastLatency,
-                'message' => $this->lastLatency.' milliseconds',
+                'latency' => $this->server->getEndLatency(),
             ];
         }
 

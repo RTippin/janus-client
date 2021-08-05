@@ -3,9 +3,7 @@
 namespace RTippin\Janus;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Throwable;
 
 /**
  * Janus Media Server REST interface
@@ -16,12 +14,12 @@ class JanusServer
     /**
      * @var string
      */
-    private string $janusServerEndpoint;
+    private string $serverEndpoint;
 
     /**
      * @var string
      */
-    private string $janusAdminServerEndpoint;
+    private string $adminServerEndpoint;
 
     /**
      * @var string
@@ -34,9 +32,14 @@ class JanusServer
     private bool $selfSigned;
 
     /**
-     * @var null|int|float
+     * @var null|float
      */
-    private $lastLatency = null;
+    private ?float $latencyStart = null;
+
+    /**
+     * @var null|float
+     */
+    private ?float $latencyEnd = null;
 
     /**
      * @var null|string
@@ -54,85 +57,119 @@ class JanusServer
     private ?string $plugin = null;
 
     /**
-     * @var array
+     * @var array|null
      */
-    private array $apiResponse = [];
+    private ?array $apiPayload = null;
 
     /**
-     * @var array
+     * @var array|null
      */
-    private array $pluginPayload = [];
+    private ?array $apiResponse = null;
 
     /**
-     * @var array
-     */
-    private array $pluginResponse = [];
-
-    /**
-     * JanusServer constructor.
-     */
-    public function __construct()
-    {
-        $this->apiSecret = config('janus.api_secret');
-        $this->janusServerEndpoint = config('janus.server_endpoint');
-        $this->janusAdminServerEndpoint = config('janus.server_admin_endpoint');
-        $this->selfSigned = config('janus.backend_ssl');
-    }
-
-    /**
-     * Log an API error if logging enabled.
-     *
-     * @param null $data
-     * @param null $route
-     * @return void
-     */
-    private function logApiError($data = null, $route = null): void
-    {
-//        if ($this->logErrors) {
-//            Log::warning('janus.api', [
-//                'payload' => $data,
-//                'route' => $route,
-//                'response' => $this->apiResponse,
-//            ]);
-//        }
-    }
-
-    /**
-     * Log error from the loaded plugin method if logging enabled.
-     *
-     * @param string $action
-     * @param array $extra
-     * @return void
-     */
-    public function logPluginError(string $action = '', array $extra = []): void
-    {
-//        if ($this->logErrors) {
-//            Log::warning($this->plugin.' - '.$action, [
-//                'payload' => $this->pluginPayload,
-//                'response' => $this->apiResponse,
-//                'extra' => $extra,
-//            ]);
-//        }
-    }
-
-    /**
-     * Set the Janus configs defaulted in the constructor and class properties
-     * Use property name as key => value.
-     *
-     * @param array|null $config
+     * @param string $serverEndpoint
      * @return $this
      */
-    public function setConfig(array $config = null): self
+    public function setServerEndpoint(string $serverEndpoint): self
     {
-        if ($config && count($config)) {
-            foreach ($config as $key => $value) {
-                if (property_exists($this, $key)) {
-                    $this->{$key} = $value;
-                }
-            }
-        }
+        $this->serverEndpoint = $serverEndpoint;
 
         return $this;
+    }
+
+    /**
+     * @param string $adminServerEndpoint
+     * @return $this
+     */
+    public function setAdminServerEndpoint(string $adminServerEndpoint): self
+    {
+        $this->adminServerEndpoint = $adminServerEndpoint;
+
+        return $this;
+    }
+
+    /**
+     * @param string $apiSecret
+     * @return $this
+     */
+    public function setApiSecret(string $apiSecret): self
+    {
+        $this->apiSecret = $apiSecret;
+
+        return $this;
+    }
+
+    /**
+     * @param bool $selfSigned
+     * @return $this
+     */
+    public function setSelfSigned(bool $selfSigned): self
+    {
+        $this->selfSigned = $selfSigned;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $sessionId
+     * @return JanusServer
+     */
+    public function setSessionId(?string $sessionId): self
+    {
+        $this->sessionId = $sessionId;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $handleId
+     * @return JanusServer
+     */
+    public function setHandleId(?string $handleId): self
+    {
+        $this->handleId = $handleId;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $plugin
+     * @return $this
+     */
+    public function setPlugin(?string $plugin): self
+    {
+        $this->plugin = $plugin;
+
+        return $this;
+    }
+
+    /**
+     * @param string|null $key
+     * @return array|string|null
+     */
+    public function getApiResponse(?string $key = null)
+    {
+        if (! is_null($key)) {
+            return $this->apiResponse[$key] ?? null;
+        }
+
+        return $this->apiResponse;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getEndLatency(): ?float
+    {
+        return $this->latencyEnd;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getApiPayload(): ?array
+    {
+        return $this->apiPayload;
     }
 
     /**
@@ -142,70 +179,6 @@ class JanusServer
      */
     public function getPluginResponse(): array
     {
-        return $this->pluginResponse;
-    }
-
-    /**
-     * Make POST/GET to janus, append session or handle ID if they exist.
-     *
-     * @param array $data
-     * @param string|null $route
-     * @param bool $admin
-     * @param bool $post
-     * @return $this
-     */
-    private function janusAPI(array $data = [],
-                              string $route = null,
-                              bool $admin = false,
-                              bool $post = true): self
-    {
-        if (! $this->janusServerEndpoint) {
-            return $this;
-        }
-
-        $client = Http::withOptions([
-            'verify' => $this->selfSigned,
-            'timeout' => 30,
-        ]);
-
-        $server = $admin ? $this->janusAdminServerEndpoint : $this->janusServerEndpoint;
-        $route = $route ? '/'.$route : '';
-        $session = $this->sessionId ? '/'.$this->sessionId : '';
-        $handle = $this->handleId ? '/'.$this->handleId : '';
-        $uri = $server.$route.$session.$handle;
-
-        try {
-            $this->trackServerLatency();
-
-            $response = $post
-                ? $client->post($uri, $data)
-                : $client->get($uri);
-
-            $this->reportServerLatency();
-
-            $this->apiResponse = $response->successful()
-                ? $response->json()
-                : [];
-        } catch (Throwable $e) {
-            report($e);
-            $this->apiResponse = [];
-        }
-
-        if (! isset($this->apiResponse['janus'])
-            || $this->apiResponse['janus'] === 'error') {
-            $this->logApiError($data, $uri);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Called after plugin message to extract plugin data response.
-     *
-     * @return void
-     */
-    private function setPluginResponse(): void
-    {
         if (isset($this->apiResponse['plugindata']['plugin'])
             && $this->apiResponse['plugindata']['plugin'] === $this->plugin
             && isset($this->apiResponse['plugindata']['data'])) {
@@ -213,28 +186,112 @@ class JanusServer
         } else {
             $this->pluginResponse = [];
         }
+
+        return $this->pluginResponse;
     }
 
     /**
-     * Start micro timer for API interaction.
-     *
-     * @return void
+     * @param array $data
+     * @param bool $admin
+     * @return array|null
      */
-    private function trackServerLatency(): void
+    public function post(array $data, bool $admin = false): ?array
     {
-        $this->pingPong = microtime(true);
-    }
+        $this->apiResponse = null;
+        $this->apiPayload = array_merge([
+            'transaction' => Str::random(12),
+            'apisecret' => $this->apiSecret,
+        ], $data);
+        $uri = $this->generateUri($admin);
 
-    /**
-     * Finish and calculate milliseconds for API call.
-     *
-     * @return void
-     */
-    private function reportServerLatency(): void
-    {
-        if ($this->pingPong) {
-            $this->lastLatency = round((microtime(true) - $this->pingPong) * 1000);
-            $this->pingPong = null;
+        $this->startMicroTime();
+
+        $response = Http::timeout(15)
+            ->withOptions(['verify' => $this->selfSigned])
+            ->post($uri, $this->apiPayload);
+
+        $this->endMicroTime();
+
+        if ($response->successful()) {
+            $this->apiResponse = $response->json();
         }
+
+        $this->checkForResponseError($uri);
+
+        return $this->apiResponse;
+    }
+
+    /**
+     * @param string|null $route
+     * @param bool $admin
+     * @return array|null
+     */
+    public function get(?string $route = null, bool $admin = false): ?array
+    {
+        $this->apiResponse = null;
+        $this->apiPayload = null;
+        $uri = $this->generateUri($admin, $route);
+
+        $this->startMicroTime();
+
+        $response = Http::timeout(15)
+            ->withOptions(['verify' => $this->selfSigned])
+            ->get($uri);
+
+        $this->endMicroTime();
+
+        if ($response->successful()) {
+            $this->apiResponse = $response->json();
+        }
+
+        $this->checkForResponseError($uri);
+
+        return $this->apiResponse;
+    }
+
+    /**
+     * @param bool $admin
+     * @param string|null $route
+     * @return string
+     */
+    private function generateUri(bool $admin = false, ?string $route = null): string
+    {
+        $server = $admin ? $this->adminServerEndpoint : $this->serverEndpoint;
+        $route = $route ? '/'.$route : '';
+        $session = $this->sessionId ? '/'.$this->sessionId : '';
+        $handle = $this->handleId ? '/'.$this->handleId : '';
+
+        return  $server.$route.$session.$handle;
+    }
+
+    /**
+     * @param string $uri
+     */
+    private function checkForResponseError(string $uri): void
+    {
+        if (! isset($this->apiResponse['janus'])
+            || $this->apiResponse['janus'] === 'error') {
+            //TODO.
+        }
+    }
+
+    /**
+     * Start micro timer for an API call.
+     *
+     * @return void
+     */
+    private function startMicroTime(): void
+    {
+        $this->latencyStart = microtime(true);
+    }
+
+    /**
+     * Finish timer for an API call.
+     *
+     * @return void
+     */
+    private function endMicroTime(): void
+    {
+        $this->latencyEnd = round((microtime(true) - $this->latencyStart) * 1000);
     }
 }
