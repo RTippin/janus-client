@@ -118,7 +118,7 @@ class VideoRoom
     }
 
     /**
-     * Create a new video room, overriding params you want to set.
+     * Create a new video room, overriding properties you want to set.
      *
      * @param array $params
      * @param bool $usePin
@@ -146,53 +146,49 @@ class VideoRoom
 
         $this->emit($payload);
 
-        if (! $this->isValidPluginResponse('created')) {
+        $room = $this->janus->server()->getPluginResponse('room');
+        $success = $this->isValidPluginResponse('created');
+
+        if (! $success) {
             //TODO.
-
-            $this->disconnect();
-
-            return null;
         }
 
         $this->disconnect();
 
-        return [
-            'room' => $this->janus->server()->getPluginResponse('room'),
-            'pin' => $payload['pin'] ?: null,
-            'secret' => $payload['secret'] ?: null,
-        ];
+        return $success ? [
+                'room' => $room,
+                'pin' => $payload['pin'] ?: null,
+                'secret' => $payload['secret'] ?: null,
+            ] : null;
     }
 
     /**
-     * Edit params of a given video room.
+     * Edit an existing video room's properties.
      *
      * @param int $room
      * @param array $params
+     * @param string|null $secret
      * @return bool
      */
-    public function edit(int $room, array $params = []): bool
+    public function edit(int $room, array $params, ?string $secret = null): bool
     {
-        $edit = [
+        $payload = array_merge([
             'request' => 'edit',
             'room' => $room,
-            'secret' => '',
-        ];
+            'secret' => $secret ?: '',
+        ], $params);
 
-        if (count($params)) {
-            foreach ($params as $key => $value) {
-                $edit[$key] = $value;
-            }
+        $this->emit($payload);
+
+        $success = $this->isValidPluginResponse('edited');
+
+        if (! $success) {
+            //TODO.
         }
 
-        $this->setup()->sendMessage($edit)->disconnect();
+        $this->disconnect();
 
-        if ($this->isValidPluginResponse('edited')) {
-            return true;
-        }
-
-        $this->janus->logPluginError('edit');
-
-        return false;
+        return $success;
     }
 
     /**
@@ -202,29 +198,30 @@ class VideoRoom
      * @param string $action
      * @param array $allowed
      * @param string|null $secret
-     * @return array
+     * @return array|null
      */
     public function allowed(int $room,
                             string $action,
-                            array $allowed = [],
-                            string $secret = null): array
+                            array $allowed,
+                            ?string $secret = null): ?array
     {
-        $this->setup()->sendMessage([
+        $this->emit([
             'request' => 'allowed',
             'room' => $room,
             'action' => $action,
-            'secret' => $secret ?? '',
+            'secret' => $secret ?: '',
             'allowed' => $allowed,
-        ])
-        ->disconnect();
+        ]);
 
-        if ($this->isValidPluginResponse()) {
-            return $this->janus->getPluginResponse();
+        $response = $this->janus->server()->getPluginResponse();
+
+        if (! $this->isValidPluginResponse()) {
+            //TODO.
         }
 
-        $this->janus->logPluginError('allowed');
+        $this->disconnect();
 
-        return [];
+        return $response;
     }
 
     /**
@@ -237,80 +234,87 @@ class VideoRoom
      */
     public function kick(int $room,
                          int $participantID,
-                         string $secret = null): bool
+                         ?string $secret = null): bool
     {
-        $this->setup()->sendMessage([
+        $this->emit([
             'request' => 'kick',
             'room' => $room,
-            'secret' => $secret ?? '',
+            'secret' => $secret ?: '',
             'id' => $participantID,
-        ])->disconnect();
+        ]);
 
-        if ($this->isValidPluginResponse()) {
-            return true;
+        $success = $this->isValidPluginResponse();
+
+        if (! $success) {
+            //TODO.
         }
 
-        $this->janus->logPluginError('kick');
-
-        return false;
+        return $success;
     }
 
     /**
      * Get a list of the participants in a specific room.
+     *
      * @param int $room
-     * @return array
+     * @return array|null
      */
-    public function listParticipants(int $room): array
+    public function listParticipants(int $room): ?array
     {
-        $this->setup()->sendMessage([
+        $this->emit([
             'request' => 'listparticipants',
             'room' => $room,
-        ])->disconnect();
+        ]);
 
-        if ($this->isValidPluginResponse('participants')) {
-            return $this->janus->getPluginResponse()['participants'];
+        $participants = $this->janus->server()->getPluginResponse('participants');
+
+        if (! $this->isValidPluginResponse('participants')) {
+            //TODO.
         }
 
-        $this->janus->logPluginError('listparticipants');
+        $this->disconnect();
 
-        return [];
+        return $participants;
     }
 
     /**
-     * Tell janus to destroy a room given the room ID and secret.
+     * Destroy a room given the room ID and optional secret.
      *
-     * @param int|null $room
+     * @param int $room
      * @param string|null $secret
      * @return bool
      */
-    public function destroy(int $room = null, ?string $secret = null): bool
+    public function destroy(int $room, ?string $secret = null): bool
     {
-        $this->setup()->sendMessage([
+        $this->emit([
             'request' => 'destroy',
             'room' => $room,
             'secret' => $secret ?: '',
-        ])->disconnect();
-
-        if ($this->isValidPluginResponse('destroyed')) {
-            return true;
-        }
-
-        $this->janus->logPluginError('destroy', [
-            'room' => $room,
-            'secret' => $secret,
         ]);
 
-        return false;
+        if (! $this->isValidPluginResponse('destroyed')) {
+            $this->disconnect();
+
+            return false;
+        }
+
+        $this->disconnect();
+
+        return true;
     }
 
     /**
-     * Create our initial session and handle for this plugin.
+     * Disconnect from the server if enabled or forced.
      *
-     * @return Janus
+     * @param bool $force
+     * @return $this
      */
-    private function setup(): Janus
+    public function disconnect(bool $force = false): self
     {
-        return $this->janus->connect()->attach(self::PLUGIN);
+        if ($this->shouldDisconnect || $force) {
+            $this->janus->disconnect();
+        }
+
+        return $this;
     }
 
     /**
@@ -331,21 +335,6 @@ class VideoRoom
             ->connect()
             ->attach(self::PLUGIN)
             ->message($message);
-    }
-
-    /**
-     * Disconnect from the server if enabled or forced.
-     *
-     * @param bool $force
-     * @return $this
-     */
-    public function disconnect(bool $force = false): self
-    {
-        if ($this->shouldDisconnect || $force) {
-            $this->janus->disconnect();
-        }
-
-        return $this;
     }
 
     /**
