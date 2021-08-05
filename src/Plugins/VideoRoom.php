@@ -291,15 +291,15 @@ class VideoRoom
             'secret' => $secret ?: '',
         ]);
 
-        if (! $this->isValidPluginResponse('destroyed')) {
-            $this->disconnect();
+        $success = $this->isValidPluginResponse('destroyed');
 
-            return false;
+        if (! $success) {
+            //TODO.
         }
 
         $this->disconnect();
 
-        return true;
+        return $success;
     }
 
     /**
