@@ -2,6 +2,10 @@
 
 namespace RTippin\Janus;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
+use RTippin\Janus\Exceptions\JanusApiException;
+use RTippin\Janus\Plugins\VideoRoom;
+
 /**
  * Laravel Janus Media Server REST interface client.
  * Created by: Richard Tippin.
@@ -20,14 +24,11 @@ class Janus
     public function __construct(Server $server)
     {
         $this->server = $server;
-
-        $this->server->setServerEndpoint(config('janus.server_endpoint'))
-            ->setAdminServerEndpoint(config('janus.server_admin_endpoint'))
-            ->setSelfSigned(config('janus.backend_ssl'))
-            ->setApiSecret(config('janus.api_secret'));
     }
 
     /**
+     * Get the server client instance.
+     *
      * @return Server
      */
     public function server(): Server
@@ -36,11 +37,23 @@ class Janus
     }
 
     /**
+     * Get the VideoRoom plugin client instance.
+     *
+     * @return VideoRoom
+     * @throws BindingResolutionException
+     */
+    public function videoRoom(): VideoRoom
+    {
+        return app()->makeWith(VideoRoom::class, ['janus' => $this]);
+    }
+
+    /**
      * Retrieve the janus server instance details.
      *
-     * @return array|null
+     * @return array
+     * @throws JanusApiException
      */
-    public function info(): ?array
+    public function info(): array
     {
         return $this->server->get('info');
     }
@@ -52,7 +65,13 @@ class Janus
      */
     public function ping(): array
     {
-        $this->server->post(['janus' => 'ping']);
+        try {
+            $this->server->post(['janus' => 'ping']);
+        } catch (JanusApiException $e) {
+            return [
+                'pong' => false,
+            ];
+        }
 
         if ($this->server->getApiResponse('janus') === 'pong') {
             return [
@@ -70,6 +89,7 @@ class Janus
      * Connect with janus to set the session ID for this request cycle.
      *
      * @return $this
+     * @throws JanusApiException
      */
     public function connect(): self
     {
@@ -88,6 +108,7 @@ class Janus
      *
      * @param string $plugin
      * @return $this
+     * @throws JanusApiException
      */
     public function attach(string $plugin): self
     {
@@ -107,6 +128,7 @@ class Janus
      * Detach from the current plugin/handle.
      *
      * @return $this
+     * @throws JanusApiException
      */
     public function detach(): self
     {
@@ -121,6 +143,7 @@ class Janus
      * Disconnect from janus, destroying our session and handle/plugin.
      *
      * @return $this
+     * @throws JanusApiException
      */
     public function disconnect(): self
     {
@@ -139,6 +162,7 @@ class Janus
      * @param array $message
      * @param string|null $jsep
      * @return $this
+     * @throws JanusApiException
      */
     public function message(array $message, ?string $jsep = null): self
     {
@@ -160,6 +184,7 @@ class Janus
      * Send janus our trickle.
      * @param string $candidate
      * @return $this
+     * @throws JanusApiException
      */
     public function trickleCandidate(string $candidate): self
     {

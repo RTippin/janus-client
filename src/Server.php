@@ -2,8 +2,10 @@
 
 namespace RTippin\Janus;
 
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use RTippin\Janus\Exceptions\JanusApiException;
 
 class Server
 {
@@ -61,6 +63,17 @@ class Server
      * @var array|null
      */
     private ?array $apiResponse = null;
+
+    /**
+     * Server Constructor.
+     */
+    public function __construct()
+    {
+        $this->setServerEndpoint(config('janus.server_endpoint'))
+            ->setAdminServerEndpoint(config('janus.server_admin_endpoint'))
+            ->setSelfSigned(config('janus.backend_ssl'))
+            ->setApiSecret(config('janus.api_secret'));
+    }
 
     /**
      * @param string $serverEndpoint
@@ -201,9 +214,10 @@ class Server
     /**
      * @param array $data
      * @param bool $admin
-     * @return array|null
+     * @return array
+     * @throws JanusApiException
      */
-    public function post(array $data, bool $admin = false): ?array
+    public function post(array $data, bool $admin = false): array
     {
         $this->apiResponse = null;
         $this->apiPayload = array_merge([
@@ -214,27 +228,29 @@ class Server
 
         $this->startMicroTime();
 
-        $response = Http::timeout(15)
-            ->withOptions(['verify' => $this->selfSigned])
-            ->post($uri, $this->apiPayload);
+        try {
+            $response = Http::timeout(15)
+                ->withOptions(['verify' => $this->selfSigned])
+                ->post($uri, $this->apiPayload)
+                ->throw();
+        } catch (RequestException $e) {
+            throw new JanusApiException("Janus POST failed", 0, $e);
+        }
 
         $this->endMicroTime();
 
-        if ($response->successful()) {
-            $this->apiResponse = $response->json();
-        }
+        $this->bailIfResponseHasJanusError($response->json(), $uri);
 
-        $this->checkForResponseError($uri);
-
-        return $this->apiResponse;
+        return $this->apiResponse = $response->json();
     }
 
     /**
      * @param string|null $route
      * @param bool $admin
-     * @return array|null
+     * @return array
+     * @throws JanusApiException
      */
-    public function get(?string $route = null, bool $admin = false): ?array
+    public function get(?string $route = null, bool $admin = false): array
     {
         $this->apiResponse = null;
         $this->apiPayload = null;
@@ -242,19 +258,20 @@ class Server
 
         $this->startMicroTime();
 
-        $response = Http::timeout(15)
-            ->withOptions(['verify' => $this->selfSigned])
-            ->get($uri);
+        try {
+            $response = Http::timeout(15)
+                ->withOptions(['verify' => $this->selfSigned])
+                ->get($uri)
+                ->throw();
+        } catch (RequestException $e) {
+            throw new JanusApiException("Janus GET failed", 0, $e);
+        }
 
         $this->endMicroTime();
 
-        if ($response->successful()) {
-            $this->apiResponse = $response->json();
-        }
+        $this->bailIfResponseHasJanusError($response->json(), $uri);
 
-        $this->checkForResponseError($uri);
-
-        return $this->apiResponse;
+        return $this->apiResponse = $response->json();
     }
 
     /**
@@ -273,14 +290,17 @@ class Server
     }
 
     /**
+     * @param array $response
      * @param string $uri
+     * @throws JanusApiException
      */
-    private function checkForResponseError(string $uri): void
+    private function bailIfResponseHasJanusError(array $response, string $uri): void
     {
-//        if (! isset($this->apiResponse['janus'])
-//            || $this->apiResponse['janus'] === 'error') {
-//            //TODO.
-//        }
+        if (! isset($response['janus']) || $response['janus'] === 'error') {
+            $response['api_payload'] = $this->apiPayload;
+
+            throw new JanusApiException("Janus Error | $uri | ".json_encode($response));
+        }
     }
 
     /**

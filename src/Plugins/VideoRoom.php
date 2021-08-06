@@ -3,6 +3,7 @@
 namespace RTippin\Janus\Plugins;
 
 use Illuminate\Support\Str;
+use RTippin\Janus\Exceptions\JanusApiException;
 use RTippin\Janus\Janus;
 
 class VideoRoom
@@ -77,6 +78,7 @@ class VideoRoom
      * List all Video Rooms we have in this janus server.
      *
      * @return array|null
+     * @throws JanusApiException
      */
     public function list(): ?array
     {
@@ -98,6 +100,7 @@ class VideoRoom
      *
      * @param int $room
      * @return bool
+     * @throws JanusApiException
      */
     public function exists(int $room): bool
     {
@@ -124,6 +127,7 @@ class VideoRoom
      * @param bool $usePin
      * @param bool $useSecret
      * @return array|null
+     * @throws JanusApiException
      */
     public function create(array $params = [],
                            bool $usePin = true,
@@ -169,6 +173,7 @@ class VideoRoom
      * @param array $params
      * @param string|null $secret
      * @return bool
+     * @throws JanusApiException
      */
     public function edit(int $room, array $params, ?string $secret = null): bool
     {
@@ -199,6 +204,7 @@ class VideoRoom
      * @param array $allowed
      * @param string|null $secret
      * @return array|null
+     * @throws JanusApiException
      */
     public function allowed(int $room,
                             string $action,
@@ -231,6 +237,7 @@ class VideoRoom
      * @param int $participantID
      * @param string|null $secret
      * @return bool
+     * @throws JanusApiException
      */
     public function kick(int $room,
                          int $participantID,
@@ -257,6 +264,7 @@ class VideoRoom
      *
      * @param int $room
      * @return array|null
+     * @throws JanusApiException
      */
     public function listParticipants(int $room): ?array
     {
@@ -282,6 +290,7 @@ class VideoRoom
      * @param int $room
      * @param string|null $secret
      * @return bool
+     * @throws JanusApiException
      */
     public function destroy(int $room, ?string $secret = null): bool
     {
@@ -307,6 +316,7 @@ class VideoRoom
      *
      * @param bool $force
      * @return $this
+     * @throws JanusApiException
      */
     public function disconnect(bool $force = false): self
     {
@@ -321,6 +331,7 @@ class VideoRoom
      * Emit our message, initiating a connection/attachment if needed.
      *
      * @param array $message
+     * @throws JanusApiException
      */
     private function emit(array $message): void
     {
