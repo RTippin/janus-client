@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RTippin\Janus\Exceptions\JanusApiException;
 
+/**
+ * @link https://janus.conf.meetecho.com/docs/rest.html
+ */
 class Server
 {
     /**
@@ -177,7 +180,7 @@ class Server
     }
 
     /**
-     * Return the response from a plugin.
+     * Get the response from a plugin.
      *
      * @return mixed|null
      */
@@ -191,6 +194,8 @@ class Server
     }
 
     /**
+     * Get the full api response.
+     *
      * @param string|null $key
      * @return mixed|null
      */
@@ -204,6 +209,8 @@ class Server
     }
 
     /**
+     * Are we attached to a plugin?
+     *
      * @return bool
      */
     public function isAttached(): bool
@@ -212,6 +219,8 @@ class Server
     }
 
     /**
+     * Send a POST request to the janus gateway.
+     *
      * @param array $data
      * @param bool $admin
      * @return array
@@ -245,6 +254,8 @@ class Server
     }
 
     /**
+     * Send a GET request to the janus gateway.
+     *
      * @param string|null $route
      * @param bool $admin
      * @return array
@@ -275,6 +286,9 @@ class Server
     }
 
     /**
+     * Generate the URI we will use for this
+     * request cycle to the janus gateway.
+     *
      * @param bool $admin
      * @param string|null $route
      * @return string
@@ -290,6 +304,9 @@ class Server
     }
 
     /**
+     * If janus gateway call succeeded, we will check the response
+     * for janus specific errors, and bail if errors are found.
+     *
      * @param array $response
      * @param string $uri
      * @throws JanusApiException

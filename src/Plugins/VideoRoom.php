@@ -7,11 +7,14 @@ use RTippin\Janus\Exceptions\JanusApiException;
 use RTippin\Janus\Exceptions\JanusPluginException;
 use RTippin\Janus\Janus;
 
+/**
+ * Janus Videoroom Plugin.
+ * @link https://janus.conf.meetecho.com/docs/videoroom.html
+ */
 class VideoRoom
 {
     /**
-     * String name of janus plugin we attach to
-     * https://janus.conf.meetecho.com/docs/videoroom.html.
+     * Plugin handle.
      */
     const PLUGIN = 'janus.plugin.videoroom';
 

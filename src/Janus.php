@@ -7,9 +7,9 @@ use RTippin\Janus\Exceptions\JanusApiException;
 use RTippin\Janus\Plugins\VideoRoom;
 
 /**
- * Laravel Janus Media Server REST interface client.
+ * Laravel Janus Client - General purpose WebRTC server.
  * Created by: Richard Tippin.
- * @link https://janus.conf.meetecho.com/docs/rest.html.
+ * @link https://janus.conf.meetecho.com/docs/
  */
 class Janus
 {
