@@ -28,5 +28,8 @@ class JanusServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/janus.php', 'janus');
+
+        $this->app->bind(Janus::class, Janus::class);
+        $this->app->alias(Janus::class, 'janus');
     }
 }
