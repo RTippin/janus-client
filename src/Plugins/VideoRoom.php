@@ -4,6 +4,7 @@ namespace RTippin\Janus\Plugins;
 
 use Illuminate\Support\Str;
 use RTippin\Janus\Exceptions\JanusApiException;
+use RTippin\Janus\Exceptions\JanusPluginException;
 use RTippin\Janus\Janus;
 
 class VideoRoom
@@ -78,15 +79,11 @@ class VideoRoom
      * List all Video Rooms we have in this janus server.
      *
      * @return array|null
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function list(): ?array
     {
-        $this->emit(['request' => 'list']);
-
-        if (! $this->isValidPluginResponse()) {
-            //TODO.
-        }
+        $this->emit(['request' => 'list'])->bailIfInvalidPluginResponse();
 
         $list = $this->janus->server()->getPluginResponse('list');
 
@@ -100,18 +97,14 @@ class VideoRoom
      *
      * @param int $room
      * @return bool
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function exists(int $room): bool
     {
         $this->emit([
             'request' => 'exists',
             'room' => $room,
-        ]);
-
-        if (! $this->isValidPluginResponse()) {
-            //TODO.
-        }
+        ])->bailIfInvalidPluginResponse();
 
         $exists = $this->janus->server()->getPluginResponse('exists') ?? false;
 
@@ -127,7 +120,7 @@ class VideoRoom
      * @param bool $usePin
      * @param bool $useSecret
      * @return array|null
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function create(array $params = [],
                            bool $usePin = true,
@@ -148,22 +141,17 @@ class VideoRoom
             'admin_key' => $this->adminKey,
         ], $params);
 
-        $this->emit($payload);
+        $this->emit($payload)->bailIfInvalidPluginResponse('created');
 
         $room = $this->janus->server()->getPluginResponse('room');
-        $success = $this->isValidPluginResponse('created');
-
-        if (! $success) {
-            //TODO.
-        }
 
         $this->disconnect();
 
-        return $success ? [
-                'room' => $room,
-                'pin' => $payload['pin'] ?: null,
-                'secret' => $payload['secret'] ?: null,
-            ] : null;
+        return [
+            'room' => $room,
+            'pin' => $payload['pin'] ?: null,
+            'secret' => $payload['secret'] ?: null,
+        ];
     }
 
     /**
@@ -173,7 +161,7 @@ class VideoRoom
      * @param array $params
      * @param string|null $secret
      * @return bool
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function edit(int $room, array $params, ?string $secret = null): bool
     {
@@ -183,17 +171,11 @@ class VideoRoom
             'secret' => $secret ?: '',
         ], $params);
 
-        $this->emit($payload);
-
-        $success = $this->isValidPluginResponse('edited');
-
-        if (! $success) {
-            //TODO.
-        }
+        $this->emit($payload)->bailIfInvalidPluginResponse('edited');
 
         $this->disconnect();
 
-        return $success;
+        return true;
     }
 
     /**
@@ -203,13 +185,13 @@ class VideoRoom
      * @param string $action
      * @param array $allowed
      * @param string|null $secret
-     * @return array|null
-     * @throws JanusApiException
+     * @return array
+     * @throws JanusApiException|JanusPluginException
      */
     public function allowed(int $room,
                             string $action,
                             array $allowed,
-                            ?string $secret = null): ?array
+                            ?string $secret = null): array
     {
         $this->emit([
             'request' => 'allowed',
@@ -217,13 +199,9 @@ class VideoRoom
             'action' => $action,
             'secret' => $secret ?: '',
             'allowed' => $allowed,
-        ]);
+        ])->bailIfInvalidPluginResponse();
 
         $response = $this->janus->server()->getPluginResponse();
-
-        if (! $this->isValidPluginResponse()) {
-            //TODO.
-        }
 
         $this->disconnect();
 
@@ -237,7 +215,7 @@ class VideoRoom
      * @param int $participantID
      * @param string|null $secret
      * @return bool
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function kick(int $room,
                          int $participantID,
@@ -248,15 +226,9 @@ class VideoRoom
             'room' => $room,
             'secret' => $secret ?: '',
             'id' => $participantID,
-        ]);
+        ])->bailIfInvalidPluginResponse();
 
-        $success = $this->isValidPluginResponse();
-
-        if (! $success) {
-            //TODO.
-        }
-
-        return $success;
+        return true;
     }
 
     /**
@@ -264,20 +236,16 @@ class VideoRoom
      *
      * @param int $room
      * @return array|null
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function listParticipants(int $room): ?array
     {
         $this->emit([
             'request' => 'listparticipants',
             'room' => $room,
-        ]);
+        ])->bailIfInvalidPluginResponse('participants');
 
         $participants = $this->janus->server()->getPluginResponse('participants');
-
-        if (! $this->isValidPluginResponse('participants')) {
-            //TODO.
-        }
 
         $this->disconnect();
 
@@ -290,7 +258,7 @@ class VideoRoom
      * @param int $room
      * @param string|null $secret
      * @return bool
-     * @throws JanusApiException
+     * @throws JanusApiException|JanusPluginException
      */
     public function destroy(int $room, ?string $secret = null): bool
     {
@@ -298,17 +266,11 @@ class VideoRoom
             'request' => 'destroy',
             'room' => $room,
             'secret' => $secret ?: '',
-        ]);
-
-        $success = $this->isValidPluginResponse('destroyed');
-
-        if (! $success) {
-            //TODO.
-        }
+        ])->bailIfInvalidPluginResponse('destroyed');
 
         $this->disconnect();
 
-        return $success;
+        return true;
     }
 
     /**
@@ -331,31 +293,41 @@ class VideoRoom
      * Emit our message, initiating a connection/attachment if needed.
      *
      * @param array $message
+     * @return $this
      * @throws JanusApiException
      */
-    private function emit(array $message): void
+    private function emit(array $message): self
     {
         if ($this->janus->server()->isAttached()
             && $this->janus->server()->getPlugin() === self::PLUGIN) {
             $this->janus->message($message);
 
-            return;
+            return $this;
         }
 
         $this->janus
             ->connect()
             ->attach(self::PLUGIN)
             ->message($message);
+
+        return $this;
     }
 
     /**
-     * Check if the plugin response we expect is valid.
+     * Check if the plugin response we expect is valid, or bail.
      *
      * @param string $success
-     * @return bool
+     * @throws JanusPluginException
      */
-    private function isValidPluginResponse(string $success = 'success'): bool
+    private function bailIfInvalidPluginResponse(string $success = 'success'): void
     {
-        return $this->janus->server()->getPluginResponse('videoroom') === $success;
+        if ($this->janus->server()->getPluginResponse('videoroom') !== $success) {
+            $data = [
+                'payload' => $this->janus->server()->getApiPayload(),
+                'response' => $this->janus->server()->getApiResponse(),
+            ];
+
+            throw new JanusPluginException('Janus Plugin Error | '.self::PLUGIN.' | '.json_encode($data));
+        }
     }
 }

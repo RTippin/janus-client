@@ -172,7 +172,7 @@ class Janus
         ];
 
         if (! is_null($jsep)) {
-            array_push($payload, ['jsep' => $jsep]);
+            $payload[] = ['jsep' => $jsep];
         }
 
         $this->server->post($payload);
@@ -182,6 +182,7 @@ class Janus
 
     /**
      * Send janus our trickle.
+     *
      * @param string $candidate
      * @return $this
      * @throws JanusApiException
