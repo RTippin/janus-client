@@ -122,14 +122,16 @@ class Janus
      */
     public function attach(string $plugin): self
     {
-        $this->server->setPlugin($plugin)->post([
+        $this->server->post([
             'janus' => 'attach',
             'plugin' => $plugin,
         ]);
 
-        $this->server->setHandleId(
-            $this->server->getApiResponse('data')['id'] ?? null
-        );
+        $handle = $this->server->getApiResponse('data')['id'] ?? null;
+
+        $this->server
+            ->setPlugin($handle ? $plugin : null)
+            ->setHandleId($handle);
 
         return $this;
     }
@@ -182,7 +184,7 @@ class Janus
         ];
 
         if (! is_null($jsep)) {
-            $payload[] = ['jsep' => $jsep];
+            $payload['jsep'] = $jsep;
         }
 
         $this->server->post($payload);
