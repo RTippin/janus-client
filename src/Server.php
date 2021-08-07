@@ -13,19 +13,19 @@ use RTippin\Janus\Exceptions\JanusApiException;
 class Server
 {
     /**
-     * @var string
+     * @var string|null
      */
-    private string $serverEndpoint;
+    private ?string $serverEndpoint;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private string $adminServerEndpoint;
+    private ?string $adminServerEndpoint;
 
     /**
-     * @var string
+     * @var string|null
      */
-    private string $apiSecret;
+    private ?string $apiSecret;
 
     /**
      * @var bool
@@ -79,10 +79,20 @@ class Server
     }
 
     /**
-     * @param string $serverEndpoint
+     * Returns all properties and their current values.
+     *
+     * @return array
+     */
+    public function getCurrentDetails(): array
+    {
+        return get_object_vars($this);
+    }
+
+    /**
+     * @param string|null $serverEndpoint
      * @return $this
      */
-    public function setServerEndpoint(string $serverEndpoint): self
+    public function setServerEndpoint(?string $serverEndpoint): self
     {
         $this->serverEndpoint = $serverEndpoint;
 
@@ -90,10 +100,10 @@ class Server
     }
 
     /**
-     * @param string $adminServerEndpoint
+     * @param string|null $adminServerEndpoint
      * @return $this
      */
-    public function setAdminServerEndpoint(string $adminServerEndpoint): self
+    public function setAdminServerEndpoint(?string $adminServerEndpoint): self
     {
         $this->adminServerEndpoint = $adminServerEndpoint;
 
@@ -101,10 +111,10 @@ class Server
     }
 
     /**
-     * @param string $apiSecret
+     * @param string|null $apiSecret
      * @return $this
      */
-    public function setApiSecret(string $apiSecret): self
+    public function setApiSecret(?string $apiSecret): self
     {
         $this->apiSecret = $apiSecret;
 
