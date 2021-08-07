@@ -2,7 +2,6 @@
 
 namespace RTippin\Janus;
 
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RTippin\Janus\Exceptions\JanusApiException;
@@ -95,7 +94,7 @@ class Server
      */
     public function setServerEndpoint(?string $serverEndpoint): self
     {
-        $this->serverEndpoint = $serverEndpoint;
+        $this->serverEndpoint = rtrim($serverEndpoint, '/');
 
         return $this;
     }
@@ -106,7 +105,7 @@ class Server
      */
     public function setAdminServerEndpoint(?string $adminServerEndpoint): self
     {
-        $this->adminServerEndpoint = $adminServerEndpoint;
+        $this->adminServerEndpoint = rtrim($adminServerEndpoint, '/');
 
         return $this;
     }

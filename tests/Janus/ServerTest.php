@@ -20,7 +20,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_returns_class_details()
+    public function it_returns_default_server_details()
     {
         $expected = [
             'serverEndpoint' => 'http://janus.test',
@@ -317,5 +317,104 @@ class ServerTest extends JanusTestCase
         $this->server->post([]);
 
         $this->assertSame('test', $this->server->getApiResponse('data'));
+    }
+
+    /** @test */
+    public function it_returns_null_api_response_if_data_key_missing()
+    {
+        $response = array_merge(self::SuccessResponse, ['data' => 'test']);
+        Http::fake([
+            self::Endpoint => Http::response($response),
+        ]);
+
+        $this->server->post([]);
+
+        $this->assertNull($this->server->getApiResponse('unknown'));
+    }
+
+    /** @test */
+    public function it_returns_entire_plugin_response()
+    {
+        $plugin = [
+            'plugin' => 'success',
+            'test' => true,
+        ];
+        $response = array_merge(self::SuccessResponse, [
+            'data' => 'test',
+            'plugindata' => [
+                'data' => $plugin,
+            ],
+        ]);
+        Http::fake([
+            self::Endpoint => Http::response($response),
+        ]);
+
+        $this->server->post([]);
+
+        $this->assertSame($plugin, $this->server->getPluginResponse());
+    }
+
+    /** @test */
+    public function it_returns_plugin_response_key_data()
+    {
+        $response = array_merge(self::SuccessResponse, [
+            'data' => 'test',
+            'plugindata' => [
+                'data' => [
+                    'plugin' => 'success',
+                    'test' => true,
+                ],
+            ],
+        ]);
+        Http::fake([
+            self::Endpoint => Http::response($response),
+        ]);
+
+        $this->server->post([]);
+
+        $this->assertSame('success', $this->server->getPluginResponse('plugin'));
+    }
+
+    /** @test */
+    public function it_returns_null_plugin_response_if_key_missing()
+    {
+        $response = array_merge(self::SuccessResponse, [
+            'data' => 'test',
+            'plugindata' => [
+                'data' => [
+                    'plugin' => 'success',
+                    'test' => true,
+                ],
+            ],
+        ]);
+        Http::fake([
+            self::Endpoint => Http::response($response),
+        ]);
+
+        $this->server->post([]);
+
+        $this->assertNull($this->server->getPluginResponse('unknown'));
+    }
+
+    /** @test */
+    public function it_returns_updated_server_details()
+    {
+        $payload = ['data' => true];
+        $response = array_merge(self::SuccessResponse, ['data' => 'test']);
+        $this->server
+            ->setSessionId('1234')
+            ->setHandleId('5678')
+            ->setPlugin('plugin');
+        Http::fake([
+            self::Endpoint.'/1234/5678' => Http::response($response),
+        ]);
+
+        $this->server->post($payload);
+
+        $this->assertSame('1234', $this->server->getCurrentDetails()['sessionId']);
+        $this->assertSame('5678', $this->server->getCurrentDetails()['handleId']);
+        $this->assertSame('plugin', $this->server->getCurrentDetails()['plugin']);
+        $this->assertArrayHasKey('data', $this->server->getCurrentDetails()['apiPayload']);
+        $this->assertSame($response, $this->server->getCurrentDetails()['apiResponse']);
     }
 }
