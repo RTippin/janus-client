@@ -81,10 +81,10 @@ class VideoRoom
     /**
      * List all Video Rooms we have in this janus server.
      *
-     * @return array|null
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
-    public function list(): ?array
+    public function list(): array
     {
         $this->emit(['request' => 'list'])->bailIfInvalidPluginResponse();
 
