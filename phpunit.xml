@@ -10,7 +10,7 @@
          processIsolation="false"
          stopOnFailure="false">
     <testsuites>
-        <testsuite name="Janus Gateway Test Suite">
+        <testsuite name="Janus Client Test Suite">
             <directory suffix="Test.php">./tests</directory>
         </testsuite>
     </testsuites>

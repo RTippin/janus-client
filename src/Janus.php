@@ -37,6 +37,16 @@ class Janus
     }
 
     /**
+     * Get the current instance of Janus.
+     *
+     * @return $this
+     */
+    public function getInstance(): self
+    {
+        return $this;
+    }
+
+    /**
      * Get the VideoRoom plugin client instance.
      *
      * @return VideoRoom

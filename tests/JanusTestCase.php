@@ -16,6 +16,13 @@ class JanusTestCase extends TestCase
 
     protected function getEnvironmentSetUp($app): void
     {
-        //
+        $config = $app->get('config');
+
+        $config->set('janus.server_endpoint', 'http://janus.test');
+        $config->set('janus.server_admin_endpoint', 'http://janus.test/admin');
+        $config->set('janus.backend_ssl', false);
+        $config->set('janus.admin_secret', 'admin-secret');
+        $config->set('janus.api_secret', 'api-secret');
+        $config->set('janus.video_room_secret', 'video-room-secret');
     }
 }
