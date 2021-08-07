@@ -122,12 +122,12 @@ class VideoRoom
      * @param array $params
      * @param bool $usePin
      * @param bool $useSecret
-     * @return array|null
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
     public function create(array $params = [],
                            bool $usePin = true,
-                           bool $useSecret = true): ?array
+                           bool $useSecret = true): array
     {
         $payload = array_merge([
             'request' => 'create',
