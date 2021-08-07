@@ -6,6 +6,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RTippin\Janus\Exceptions\JanusApiException;
+use Throwable;
 
 /**
  * @link https://janus.conf.meetecho.com/docs/rest.html
@@ -219,13 +220,25 @@ class Server
     }
 
     /**
+     * Determine if we have an active session established.
+     *
+     * @return bool
+     */
+    public function isConnected(): bool
+    {
+        return ! is_null($this->sessionId);
+    }
+
+    /**
      * Are we attached to a plugin?
      *
      * @return bool
      */
     public function isAttached(): bool
     {
-        return ! is_null($this->handleId) && ! is_null($this->plugin);
+        return $this->isConnected()
+            && ! is_null($this->handleId)
+            && ! is_null($this->plugin);
     }
 
     /**
@@ -239,11 +252,11 @@ class Server
     public function post(array $data, bool $admin = false): array
     {
         $this->apiResponse = null;
+        $uri = $this->generateUri($admin);
         $this->apiPayload = array_merge([
             'transaction' => Str::random(12),
             'apisecret' => $this->apiSecret,
         ], $data);
-        $uri = $this->generateUri($admin);
 
         $this->startMicroTime();
 
@@ -252,7 +265,7 @@ class Server
                 ->withOptions(['verify' => $this->selfSigned])
                 ->post($uri, $this->apiPayload)
                 ->throw();
-        } catch (RequestException $e) {
+        } catch (Throwable $e) {
             throw new JanusApiException("Janus POST failed", 0, $e);
         }
 
@@ -284,7 +297,7 @@ class Server
                 ->withOptions(['verify' => $this->selfSigned])
                 ->get($uri)
                 ->throw();
-        } catch (RequestException $e) {
+        } catch (Throwable $e) {
             throw new JanusApiException("Janus GET failed", 0, $e);
         }
 

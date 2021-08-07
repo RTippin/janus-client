@@ -40,6 +40,20 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
+    public function it_is_not_connected()
+    {
+        $this->assertFalse($this->server->isConnected());
+    }
+
+    /** @test */
+    public function it_is_connected()
+    {
+        $this->server->setSessionId('session');
+
+        $this->assertTrue($this->server->isConnected());
+    }
+
+    /** @test */
     public function it_is_not_attached_to_a_plugin()
     {
         $this->assertFalse($this->server->isAttached());
@@ -49,10 +63,25 @@ class ServerTest extends JanusTestCase
     /** @test */
     public function it_is_attached_to_a_plugin()
     {
-        $this->server->setPlugin('plugin')->setHandleId('handle');
+        $this->server
+            ->setPlugin('plugin')
+            ->setSessionId('session')
+            ->setHandleId('handle');
 
         $this->assertTrue($this->server->isAttached());
         $this->assertSame('plugin', $this->server->getPlugin());
+    }
+
+    /** @test */
+    public function it_has_null_api_payload_by_default()
+    {
+        $this->assertNull($this->server->getApiPayload());
+    }
+
+    /** @test */
+    public function it_has_null_api_response_by_default()
+    {
+        $this->assertNull($this->server->getApiResponse());
     }
 
     /** @test */
@@ -130,7 +159,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_post_and_returns_set_data()
+    public function it_sends_post_and_returns_set_data()
     {
         Http::fake([
             self::Endpoint => Http::response(self::SuccessResponse),
@@ -144,7 +173,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_get_request_and_returns_set_data()
+    public function it_sends_get_request_and_returns_set_data()
     {
         Http::fake([
             self::Endpoint => Http::response(self::SuccessResponse),
@@ -158,7 +187,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_post_and_merges_api_secret_and_transaction_with_data()
+    public function it_sends_post_and_merges_api_secret_and_transaction_with_data()
     {
         Http::fake([
             self::Endpoint => Http::response(self::SuccessResponse),
@@ -175,7 +204,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_can_post_to_admin_endpoint()
+    public function it_can_send_post_to_admin_endpoint()
     {
         Http::fake([
             self::AdminEndpoint => Http::response(self::SuccessResponse),
@@ -187,7 +216,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_can_get_request_specified_endpoint()
+    public function it_can_send_get_request_specified_endpoint()
     {
         Http::fake([
             self::Endpoint.'/test' => Http::response(self::SuccessResponse),
@@ -199,7 +228,7 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_can_get_request_to_admin_endpoint()
+    public function it_can_send_get_request_to_admin_endpoint()
     {
         Http::fake([
             self::AdminEndpoint => Http::response(self::SuccessResponse),
@@ -232,5 +261,61 @@ class ServerTest extends JanusTestCase
         $this->server->get();
 
         $this->assertIsFloat($this->server->getEndLatency());
+    }
+
+    /** @test */
+    public function it_uses_session_in_uri_when_set()
+    {
+        $this->server->setSessionId('1234');
+        Http::fake([
+            self::Endpoint.'/1234' => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->server->post([]);
+
+        Http::assertSent(function (Request $request) {
+            return $request->url() === self::Endpoint.'/1234';
+        });
+    }
+
+    /** @test */
+    public function it_uses_session_and_handle_in_uri_when_set()
+    {
+        $this->server->setSessionId('1234')->setHandleId('5678');
+        Http::fake([
+            self::Endpoint.'/1234/5678' => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->server->post([]);
+
+        Http::assertSent(function (Request $request) {
+            return $request->url() === self::Endpoint.'/1234/5678';
+        });
+    }
+
+    /** @test */
+    public function it_returns_entire_api_response()
+    {
+        $response = array_merge(self::SuccessResponse, ['data' => 'test']);
+        Http::fake([
+            self::Endpoint => Http::response($response),
+        ]);
+
+        $this->server->post([]);
+
+        $this->assertSame($response, $this->server->getApiResponse());
+    }
+
+    /** @test */
+    public function it_returns_api_response_key_data()
+    {
+        $response = array_merge(self::SuccessResponse, ['data' => 'test']);
+        Http::fake([
+            self::Endpoint => Http::response($response),
+        ]);
+
+        $this->server->post([]);
+
+        $this->assertSame('test', $this->server->getApiResponse('data'));
     }
 }
