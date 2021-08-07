@@ -172,11 +172,11 @@ class Janus
      * Send janus our message.
      *
      * @param array $message
-     * @param string|null $jsep
+     * @param string|array|null $jsep
      * @return $this
      * @throws JanusApiException
      */
-    public function message(array $message, ?string $jsep = null): self
+    public function message(array $message, $jsep = null): self
     {
         $payload = [
             'janus' => 'message',
@@ -195,11 +195,11 @@ class Janus
     /**
      * Send janus our trickle.
      *
-     * @param string $candidate
+     * @param string|array $candidate
      * @return $this
      * @throws JanusApiException
      */
-    public function trickleCandidate(string $candidate): self
+    public function trickleCandidate($candidate): self
     {
         $this->server->post([
             'janus' => 'trickle',

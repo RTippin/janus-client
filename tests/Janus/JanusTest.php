@@ -172,4 +172,98 @@ class JanusTest extends JanusTestCase
         $this->assertNull($this->janus->server()->getCurrentDetails()['handleId']);
         $this->assertNull($this->janus->server()->getCurrentDetails()['plugin']);
     }
+
+    /** @test */
+    public function it_detaches_and_removes_plugin_and_handle_id()
+    {
+        $this->janus
+            ->server()
+            ->setPlugin('plugin')
+            ->setSessionId('1234')
+            ->setHandleId('5678');
+        Http::fake([
+            self::Endpoint.'/1234/5678' => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->janus->detach();
+
+        Http::assertSent(function (Request $request) {
+            return $request['janus'] === 'detach';
+        });
+        $this->assertSame('1234', $this->janus->server()->getCurrentDetails()['sessionId']);
+        $this->assertNull($this->janus->server()->getCurrentDetails()['handleId']);
+        $this->assertNull($this->janus->server()->getCurrentDetails()['plugin']);
+    }
+
+    /** @test */
+    public function it_disconnects_and_removes_plugin_session_and_handle_id()
+    {
+        $this->janus
+            ->server()
+            ->setPlugin('plugin')
+            ->setSessionId('1234')
+            ->setHandleId('5678');
+        Http::fake([
+            self::Endpoint.'/1234' => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->janus->disconnect();
+
+        Http::assertSent(function (Request $request) {
+            return $request['janus'] === 'destroy';
+        });
+        $this->assertNull($this->janus->server()->getCurrentDetails()['sessionId']);
+        $this->assertNull($this->janus->server()->getCurrentDetails()['handleId']);
+        $this->assertNull($this->janus->server()->getCurrentDetails()['plugin']);
+    }
+
+    /** @test */
+    public function it_sends_message()
+    {
+        Http::fake([
+            self::Endpoint => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->janus->message(['message' => 'test']);
+
+        Http::assertSent(function (Request $request) {
+            return $request['janus'] === 'message'
+                && $request['body']['message'] === 'test'
+                && ! isset($request['jsep']);
+        });
+        $this->assertSame(self::SuccessResponse, $this->janus->server()->getApiResponse());
+    }
+
+    /** @test */
+    public function it_sends_message_with_jsep()
+    {
+        Http::fake([
+            self::Endpoint => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->janus->message(['message' => 'test'], ['extra' => true]);
+
+        Http::assertSent(function (Request $request) {
+            return $request['janus'] === 'message'
+                && $request['body']['message'] === 'test'
+                && $request['jsep']['extra'] === true;
+        });
+        $this->assertSame(self::SuccessResponse, $this->janus->server()->getApiResponse());
+    }
+
+    /** @test */
+    public function it_sends_trickle_candidate()
+    {
+        Http::fake([
+            self::Endpoint => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->janus->trickleCandidate('candidate');
+
+        Http::assertSent(function (Request $request) {
+            return $request['janus'] === 'trickle'
+                && $request['candidate'] === 'candidate';
+        });
+        $this->assertSame(self::SuccessResponse, $this->janus->server()->getApiResponse());
+    }
 }
