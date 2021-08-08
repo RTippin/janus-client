@@ -29,6 +29,12 @@ interface JanusPlugin
     public function janus(): Janus;
 
     /**
+     * @param string|null $key
+     * @return mixed|null
+     */
+    public function getPluginPayload(?string $key = null);
+
+    /**
      * Get the response from a plugin.
      *
      * @return mixed|null

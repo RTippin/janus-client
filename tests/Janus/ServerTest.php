@@ -333,6 +333,45 @@ class ServerTest extends JanusTestCase
     }
 
     /** @test */
+    public function it_returns_entire_api_payload()
+    {
+        $payload = ['testing' => true];
+        Http::fake([
+            self::Endpoint => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->server->post($payload);
+
+        $this->assertArrayHasKey('testing', $this->server->getApiPayload());
+    }
+
+    /** @test */
+    public function it_returns_api_payload_key_data()
+    {
+        $payload = ['testing' => 'janus'];
+        Http::fake([
+            self::Endpoint => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->server->post($payload);
+
+        $this->assertSame('janus', $this->server->getApiPayload('testing'));
+    }
+
+    /** @test */
+    public function it_returns_null_api_payload_if_data_key_missing()
+    {
+        $payload = ['testing' => 'janus'];
+        Http::fake([
+            self::Endpoint => Http::response(self::SuccessResponse),
+        ]);
+
+        $this->server->post($payload);
+
+        $this->assertNull($this->server->getApiPayload('unknown'));
+    }
+
+    /** @test */
     public function it_returns_entire_plugin_response()
     {
         $plugin = [

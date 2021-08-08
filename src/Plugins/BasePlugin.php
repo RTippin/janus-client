@@ -49,6 +49,14 @@ abstract class BasePlugin implements JanusPlugin
     /**
      * @inheritDoc
      */
+    public function getPluginPayload(?string $key = null)
+    {
+        return $this->janus->server()->getApiPayload($key);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getPluginResponse(?string $key = null)
     {
         return $this->janus->server()->getPluginResponse($key);

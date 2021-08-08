@@ -193,7 +193,7 @@ class VideoRoomTest extends JanusTestCase
         ]);
 
         $room = $this->videoRoom->withoutDisconnect()->create();
-        $payload = $this->videoRoom->janus()->server()->getApiPayload()['body'];
+        $payload = $this->videoRoom->getPluginPayload('body');
 
         $this->assertSame(1234, $room['room']);
         $this->assertTrue(strlen($room['pin']) === 6);
@@ -227,7 +227,7 @@ class VideoRoomTest extends JanusTestCase
         ]);
 
         $room = $this->videoRoom->withoutDisconnect()->create($params, false, false);
-        $payload = $this->videoRoom->janus()->server()->getApiPayload()['body'];
+        $payload = $this->videoRoom->getPluginPayload('body');
 
         $this->assertSame(1234, $room['room']);
         $this->assertNull($room['pin']);
@@ -257,4 +257,26 @@ class VideoRoomTest extends JanusTestCase
 
         $this->videoRoom->create();
     }
+
+//    /** @test */
+//    public function it_edits_video_room()
+//    {
+//        $plugin = [
+//            'plugindata' => [
+//                'data' => [
+//                    'videoroom' => 'edited',
+//                ],
+//            ],
+//        ];
+//        Http::fake([
+//            self::Endpoint => Http::sequence()
+//                ->push(self::SuccessResponse) //connect
+//                ->push(self::SuccessResponse) //attach
+//                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+//        ]);
+//
+//        $edit = $this->videoRoom->withoutDisconnect()->edit(1234, ['edited' => true]);
+//
+//        $this->assertTrue($edit);
+//    }
 }

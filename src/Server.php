@@ -182,10 +182,15 @@ class Server
     }
 
     /**
-     * @return array|null
+     * @param string|null $key
+     * @return mixed|null
      */
-    public function getApiPayload(): ?array
+    public function getApiPayload(?string $key = null)
     {
+        if (! is_null($key)) {
+            return $this->apiPayload[$key] ?? null;
+        }
+
         return $this->apiPayload;
     }
 
