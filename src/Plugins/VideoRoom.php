@@ -217,10 +217,10 @@ class VideoRoom extends BasePlugin
      * Get a list of the participants in a specific room.
      *
      * @param int $room
-     * @return array|null
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
-    public function listParticipants(int $room): ?array
+    public function listParticipants(int $room): array
     {
         $this->emit([
             'request' => 'listparticipants',

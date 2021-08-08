@@ -479,4 +479,124 @@ class VideoRoomTest extends JanusTestCase
 
         $this->videoRoom->kick(1234, 5678);
     }
+
+    /** @test */
+    public function it_lists_video_room_participants()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'participants',
+                    'participants' => [1, 2, 3],
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $list = $this->videoRoom->withoutDisconnect()->listParticipants(1234);
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('listparticipants', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertSame([1, 2, 3], $list);
+    }
+
+    /** @test */
+    public function it_throws_exception_if_invalid_list_participants_response()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'error',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $this->expectException(JanusPluginException::class);
+
+        $this->videoRoom->listParticipants(1234);
+    }
+
+    /** @test */
+    public function it_destroys_video_room()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'destroyed',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $destroy = $this->videoRoom->withoutDisconnect()->destroy(1234);
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('destroy', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertEmpty($payload['secret']);
+        $this->assertTrue($destroy);
+    }
+
+    /** @test */
+    public function it_destroys_video_room_with_secret()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'destroyed',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $destroy = $this->videoRoom->withoutDisconnect()->destroy(1234, 'secret');
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('secret', $payload['secret']);
+        $this->assertTrue($destroy);
+    }
+
+    /** @test */
+    public function it_throws_exception_if_invalid_destroy_response()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'error',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $this->expectException(JanusPluginException::class);
+
+        $this->videoRoom->destroy(1234);
+    }
 }
