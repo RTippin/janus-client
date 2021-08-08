@@ -27,6 +27,7 @@ class JanusTestCase extends TestCase
         $config->set('janus.server_endpoint', self::Endpoint);
         $config->set('janus.admin_server_endpoint', self::AdminEndpoint);
         $config->set('janus.verify_ssl', false);
+        $config->set('janus.debug', false);
         $config->set('janus.admin_secret', self::AdminSecret);
         $config->set('janus.api_secret', self::ApiSecret);
         $config->set('janus.video_room_secret', 'video-room-secret');

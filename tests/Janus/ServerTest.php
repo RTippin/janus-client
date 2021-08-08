@@ -27,6 +27,7 @@ class ServerTest extends JanusTestCase
             'adminServerEndpoint' => 'http://janus.test/admin',
             'apiSecret' => 'api-secret',
             'verifySSL' => false,
+            'debug' => false,
             'latencyStart' => null,
             'latencyEnd' => null,
             'sessionId' => null,
@@ -450,10 +451,12 @@ class ServerTest extends JanusTestCase
 
         $this->server->post($payload);
 
-        $this->assertSame('1234', $this->server->getCurrentDetails()['sessionId']);
-        $this->assertSame('5678', $this->server->getCurrentDetails()['handleId']);
-        $this->assertSame('plugin', $this->server->getCurrentDetails()['plugin']);
-        $this->assertArrayHasKey('data', $this->server->getCurrentDetails()['apiPayload']);
-        $this->assertSame($response, $this->server->getCurrentDetails()['apiResponse']);
+        $details = $this->server->getCurrentDetails();
+
+        $this->assertSame('1234', $details['sessionId']);
+        $this->assertSame('5678', $details['handleId']);
+        $this->assertSame('plugin', $details['plugin']);
+        $this->assertArrayHasKey('data', $details['apiPayload']);
+        $this->assertSame($response, $details['apiResponse']);
     }
 }

@@ -33,6 +33,11 @@ class Server
     private bool $verifySSL;
 
     /**
+     * @var bool
+     */
+    private bool $debug;
+
+    /**
      * @var null|float
      */
     private ?float $latencyStart = null;
@@ -75,6 +80,7 @@ class Server
         $this->setServerEndpoint(config('janus.server_endpoint'))
             ->setAdminServerEndpoint(config('janus.admin_server_endpoint'))
             ->setVerifySSL(config('janus.verify_ssl'))
+            ->setDebug(config('janus.debug'))
             ->setApiSecret(config('janus.api_secret'));
     }
 
@@ -128,6 +134,17 @@ class Server
     public function setVerifySSL(bool $verifySSL): self
     {
         $this->verifySSL = $verifySSL;
+
+        return $this;
+    }
+
+    /**
+     * @param bool $debug
+     * @return Server
+     */
+    public function setDebug(bool $debug): self
+    {
+        $this->debug = $debug;
 
         return $this;
     }
@@ -268,16 +285,19 @@ class Server
             $response = Http::timeout(15)
                 ->withOptions(['verify' => $this->verifySSL])
                 ->post($uri, $this->apiPayload)
-                ->throw();
+                ->throw()
+                ->json();
         } catch (Throwable $e) {
             throw new JanusApiException("Janus POST failed", 0, $e);
         }
 
         $this->endMicroTime();
 
-        $this->bailIfResponseHasJanusError($response->json(), $uri);
+        $this->dumpIfDebugEnabled($response);
 
-        return $this->apiResponse = $response->json();
+        $this->bailIfResponseHasJanusError($response, $uri);
+
+        return $this->apiResponse = $response;
     }
 
     /**
@@ -300,16 +320,19 @@ class Server
             $response = Http::timeout(15)
                 ->withOptions(['verify' => $this->verifySSL])
                 ->get($uri)
-                ->throw();
+                ->throw()
+                ->json();
         } catch (Throwable $e) {
             throw new JanusApiException("Janus GET failed", 0, $e);
         }
 
         $this->endMicroTime();
 
-        $this->bailIfResponseHasJanusError($response->json(), $uri);
+        $this->dumpIfDebugEnabled($response);
 
-        return $this->apiResponse = $response->json();
+        $this->bailIfResponseHasJanusError($response, $uri);
+
+        return $this->apiResponse = $response;
     }
 
     /**
@@ -365,5 +388,17 @@ class Server
     private function endMicroTime(): void
     {
         $this->latencyEnd = round((microtime(true) - $this->latencyStart) * 1000);
+    }
+
+    /**
+     * @param array|null $response
+     */
+    private function dumpIfDebugEnabled(?array $response): void
+    {
+        if ($this->debug) {
+            dump('PAYLOAD', $this->apiPayload);
+            dump('RESPONSE', $response);
+            dump('LATENCY', $this->latencyEnd);
+        }
     }
 }
