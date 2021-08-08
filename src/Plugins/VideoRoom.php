@@ -309,6 +309,6 @@ class VideoRoom extends BasePlugin
 
         $this->disconnect();
 
-        return true;
+        return $record;
     }
 }

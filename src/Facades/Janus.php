@@ -8,6 +8,7 @@ use RTippin\Janus\Server;
 
 /**
  * @method static Server server()
+ * @method static \RTippin\Janus\Janus debug(bool $debug = true)
  * @method static \RTippin\Janus\Janus getInstance()
  * @method static VideoRoom videoRoom()
  * @method static array info()

@@ -728,7 +728,7 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame(1234, $payload['room']);
         $this->assertFalse($payload['record']);
         $this->assertSame('secret', $payload['secret']);
-        $this->assertTrue($record);
+        $this->assertFalse($record);
     }
 
     /** @test */

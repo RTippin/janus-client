@@ -27,6 +27,19 @@ class Janus
     }
 
     /**
+     * Enable or disable debug dumps for this cycle.
+     *
+     * @param bool $debug
+     * @return $this
+     */
+    public function debug(bool $debug = true): self
+    {
+        $this->server->setDebug($debug);
+
+        return $this;
+    }
+
+    /**
      * Get the server client instance.
      *
      * @return Server
