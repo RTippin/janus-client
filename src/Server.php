@@ -288,7 +288,7 @@ class Server
                 ->throw()
                 ->json();
         } catch (Throwable $e) {
-            throw new JanusApiException("Janus POST failed", 0, $e);
+            throw new JanusApiException('Janus POST failed', 0, $e);
         }
 
         $this->endMicroTime();
@@ -323,7 +323,7 @@ class Server
                 ->throw()
                 ->json();
         } catch (Throwable $e) {
-            throw new JanusApiException("Janus GET failed", 0, $e);
+            throw new JanusApiException('Janus GET failed', 0, $e);
         }
 
         $this->endMicroTime();

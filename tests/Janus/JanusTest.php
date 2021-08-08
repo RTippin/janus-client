@@ -107,7 +107,7 @@ class JanusTest extends JanusTestCase
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
                     'id' => '1234',
-                ]
+                ],
             ])),
         ]);
 
@@ -126,7 +126,7 @@ class JanusTest extends JanusTestCase
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
                     'invalid' => '1234',
-                ]
+                ],
             ])),
         ]);
 
@@ -142,7 +142,7 @@ class JanusTest extends JanusTestCase
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
                     'id' => '5678',
-                ]
+                ],
             ])),
         ]);
 
@@ -163,7 +163,7 @@ class JanusTest extends JanusTestCase
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
                     'invalid' => '5678',
-                ]
+                ],
             ])),
         ]);
 
