@@ -599,4 +599,157 @@ class VideoRoomTest extends JanusTestCase
 
         $this->videoRoom->destroy(1234);
     }
+
+    /** @test */
+    public function it_moderates_video_room_participant()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'success',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $moderate = $this->videoRoom->withoutDisconnect()->moderate(1234, 5678, true, 'mid');
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('moderate', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertSame(5678, $payload['id']);
+        $this->assertSame('mid', $payload['mid']);
+        $this->assertTrue($payload['mute']);
+        $this->assertEmpty($payload['secret']);
+        $this->assertTrue($moderate);
+    }
+
+    /** @test */
+    public function it_moderates_video_room_participant_with_secret()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'success',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $moderate = $this->videoRoom->withoutDisconnect()->moderate(1234, 5678, false, null, 'secret');
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertEmpty($payload['mid']);
+        $this->assertFalse($payload['mute']);
+        $this->assertSame('secret', $payload['secret']);
+        $this->assertTrue($moderate);
+    }
+
+    /** @test */
+    public function it_throws_exception_if_invalid_moderate_response()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'error',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $this->expectException(JanusPluginException::class);
+
+        $this->videoRoom->moderate(1234, 5678, false);
+    }
+
+    /** @test */
+    public function it_enables_video_room_recording()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'success',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $record = $this->videoRoom->withoutDisconnect()->enableRecording(1234, true);
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('enable_recording', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertTrue($payload['record']);
+        $this->assertEmpty($payload['secret']);
+        $this->assertTrue($record);
+    }
+
+    /** @test */
+    public function it_enables_video_room_recording_with_secret()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'success',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $record = $this->videoRoom->withoutDisconnect()->enableRecording(1234, false, 'secret');
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('enable_recording', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertFalse($payload['record']);
+        $this->assertSame('secret', $payload['secret']);
+        $this->assertTrue($record);
+    }
+
+    /** @test */
+    public function it_throws_exception_if_invalid_recording_response()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'error',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $this->expectException(JanusPluginException::class);
+
+        $this->videoRoom->enableRecording(1234, true);
+    }
 }

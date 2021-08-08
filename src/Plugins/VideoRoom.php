@@ -254,4 +254,61 @@ class VideoRoom extends BasePlugin
 
         return true;
     }
+
+    /**
+     * Moderate by muting/un-muting a participants stream.
+     *
+     * @param int $room
+     * @param int $participantID
+     * @param bool $mute
+     * @param string|null $mid
+     * @param string|null $secret
+     * @return bool
+     * @throws JanusApiException|JanusPluginException
+     */
+    public function moderate(int $room,
+                             int $participantID,
+                             bool $mute,
+                             ?string $mid = null,
+                             ?string $secret = null): bool
+    {
+        $this->emit([
+            'request' => 'moderate',
+            'room' => $room,
+            'id' => $participantID,
+            'mid' => $mid ?: '',
+            'mute' => $mute,
+            'secret' => $secret ?: '',
+        ])->bailIfInvalidPluginResponse();
+
+        $this->disconnect();
+
+        return true;
+    }
+
+    /**
+     * Enable or disable recording on all participants for the given room.
+     *
+     * @param int $room
+     * @param bool $record
+     * @param string|null $secret
+     * @return bool
+     * @throws JanusApiException
+     * @throws JanusPluginException
+     */
+    public function enableRecording(int $room,
+                                    bool $record,
+                                    ?string $secret = null): bool
+    {
+        $this->emit([
+            'request' => 'enable_recording',
+            'room' => $room,
+            'record' => $record,
+            'secret' => $secret ?: '',
+        ])->bailIfInvalidPluginResponse();
+
+        $this->disconnect();
+
+        return true;
+    }
 }
