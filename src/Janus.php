@@ -155,13 +155,16 @@ class Janus
      * Disconnect from janus, destroying our session and handle/plugin.
      *
      * @return $this
-     * @throws JanusApiException
      */
     public function disconnect(): self
     {
         $this->server->setPlugin(null)->setHandleId(null);
 
-        $this->server->post(['janus' => 'destroy']);
+        try {
+            $this->server->post(['janus' => 'destroy']);
+        } catch (JanusApiException $e) {
+            //State will be cleared, continue on!
+        }
 
         $this->server->setSessionId(null);
 

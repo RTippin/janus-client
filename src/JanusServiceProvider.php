@@ -29,7 +29,7 @@ class JanusServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/janus.php', 'janus');
 
-        $this->app->bind(Janus::class, Janus::class);
+        $this->app->singleton(Janus::class, Janus::class);
         $this->app->alias(Janus::class, 'janus');
     }
 }

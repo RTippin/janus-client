@@ -21,21 +21,21 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
-    public function janus_facade_resolves_new_instance()
+    public function janus_facade_resolves_same_instance()
     {
         $instance = \RTippin\Janus\Facades\Janus::getInstance();
 
         $this->assertInstanceOf(Janus::class, $instance);
-        $this->assertNotSame($this->janus, $instance);
+        $this->assertSame($this->janus, $instance);
     }
 
     /** @test */
-    public function janus_alias_resolves_new_instance()
+    public function janus_alias_resolves_same_instance()
     {
         $instance = app('janus');
 
         $this->assertInstanceOf(Janus::class, $instance);
-        $this->assertNotSame($this->janus, $instance);
+        $this->assertSame($this->janus, $instance);
     }
 
     /** @test */
