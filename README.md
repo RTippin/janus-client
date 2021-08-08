@@ -8,22 +8,32 @@
 
 ---
 
-## This package provides a client that allows you to fluently interact with your [Janus Gateway Server][link-janus]
+### This package provides a client that allows you to fluently interact with your [Janus Gateway Server][link-janus]
+
+## Support
+- Core REST API wrapper to interact with janus.
+- VideoRoom plugin wrapper.
 
 ---
-
+**Fluent, convenient, clean.**
 ```php
 use RTippin\Janus\Facades\Janus;
 
 $ping = Janus::ping(); 
+
 ---------------------------------------
+
 ['pong' => true]
+
 ---------------------------------------
+
 $room = Janus::videoRoom()->create([
     'description' => 'My first room!',
     'publishers' => 4,
 ]);
+
 ---------------------------------------
+
 [
   'videoroom' => 'created',
   'room' => 6663183870503329,
@@ -174,6 +184,30 @@ $rooms = Janus::getApiResponse();
 
 Janus::disconnect();
 ```
+
+----
+
+# Video Room
+
+- You may access the video room plugin through the core `Janus` class/facade, or dependency injection of the core `VideoRoom` class.
+```php
+use RTippin\Janus\Facades\Janus;
+
+public function videoRoom()
+{
+   return Janus::videoRoom();
+}
+```
+```php
+use RTippin\Janus\Plugins\VideoRoom;
+
+public function videoRoom(VideoRoom $videoRoom)
+{
+   return $videoRoom;
+}
+```
+
+## WIP VideoRoom Docs
 
 ---
 
