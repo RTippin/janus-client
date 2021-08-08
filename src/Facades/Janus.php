@@ -13,6 +13,7 @@ use RTippin\Janus\Server;
  * @method static VideoRoom videoRoom()
  * @method static array info()
  * @method static array ping()
+ * @method static mixed getApiResponse()
  * @method static \RTippin\Janus\Janus connect()
  * @method static \RTippin\Janus\Janus attach(string $plugin)
  * @method static \RTippin\Janus\Janus detach()

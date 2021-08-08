@@ -126,8 +126,8 @@ class Janus
     }
 
     /**
-     * Attach to the janus plugin to get a handle ID. All api calls in this
-     * request cycle will go to this plugin unless you call detach.
+     * Attach to a janus plugin to set our handle ID. All following API calls
+     * in this request cycles will go to this plugin unless you call detach.
      *
      * @param string $plugin
      * @return $this
@@ -223,5 +223,15 @@ class Janus
         ]);
 
         return $this;
+    }
+
+    /**
+     * Get the full api response for the last request in this cycle.
+     *
+     * @return array|mixed|null
+     */
+    public function getApiResponse()
+    {
+        return $this->server->getApiResponse();
     }
 }
