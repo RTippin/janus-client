@@ -165,25 +165,25 @@ class VideoRoom extends BasePlugin
      *
      * @param int $room
      * @param string $action
-     * @param array $allowed
+     * @param array|null $allowed
      * @param string|null $secret
-     * @return array
+     * @return array|null
      * @throws JanusApiException|JanusPluginException
      */
     public function allowed(int $room,
                             string $action,
-                            array $allowed,
-                            ?string $secret = null): array
+                            ?array $allowed = null,
+                            ?string $secret = null): ?array
     {
         $this->emit([
             'request' => 'allowed',
             'room' => $room,
             'action' => $action,
             'secret' => $secret ?: '',
-            'allowed' => $allowed,
+            'allowed' => $allowed ?: '',
         ])->bailIfInvalidPluginResponse();
 
-        $response = $this->getPluginResponse();
+        $response = $this->getPluginResponse('allowed');
 
         $this->disconnect();
 
