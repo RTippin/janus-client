@@ -11,27 +11,12 @@ use RTippin\Janus\Janus;
  * Janus Videoroom Plugin.
  * @link https://janus.conf.meetecho.com/docs/videoroom.html
  */
-class VideoRoom
+class VideoRoom extends BasePlugin
 {
-    /**
-     * Plugin handle.
-     */
-    const PLUGIN = 'janus.plugin.videoroom';
-
-    /**
-     * @var Janus
-     */
-    private Janus $janus;
-
     /**
      * @var string|null
      */
     private ?string $adminKey;
-
-    /**
-     * @var bool
-     */
-    private bool $shouldDisconnect = true;
 
     /**
      * VideoRoom constructor.
@@ -40,16 +25,25 @@ class VideoRoom
      */
     public function __construct(Janus $janus)
     {
-        $this->janus = $janus;
+        parent::__construct($janus);
+
         $this->setAdminKey(config('janus.video_room_secret'));
     }
 
     /**
-     * @return Janus
+     * @inheritDoc
      */
-    public function janus(): Janus
+    public function getPluginName(): string
     {
-        return $this->janus;
+        return 'janus.plugin.videoroom';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPluginShortName(): string
+    {
+        return 'videoroom';
     }
 
     /**
@@ -64,21 +58,6 @@ class VideoRoom
     }
 
     /**
-     * If you want to call to multiple methods within one request cycle, this
-     * disables automatically disconnecting, resulting in less request in the
-     * cycle to the janus server. When you are done, you must manually call to
-     * the disconnect method with force set to true.
-     *
-     * @return $this
-     */
-    public function withoutDisconnect(): self
-    {
-        $this->shouldDisconnect = false;
-
-        return $this;
-    }
-
-    /**
      * List all Video Rooms we have in this janus server.
      *
      * @return array
@@ -88,7 +67,7 @@ class VideoRoom
     {
         $this->emit(['request' => 'list'])->bailIfInvalidPluginResponse();
 
-        $list = $this->janus->server()->getPluginResponse('list');
+        $list = $this->getPluginResponse('list');
 
         $this->disconnect();
 
@@ -109,7 +88,7 @@ class VideoRoom
             'room' => $room,
         ])->bailIfInvalidPluginResponse();
 
-        $exists = $this->janus->server()->getPluginResponse('exists') ?? false;
+        $exists = $this->getPluginResponse('exists') ?? false;
 
         $this->disconnect();
 
@@ -146,7 +125,7 @@ class VideoRoom
 
         $this->emit($payload)->bailIfInvalidPluginResponse('created');
 
-        $room = $this->janus->server()->getPluginResponse('room');
+        $room = $this->getPluginResponse('room');
 
         $this->disconnect();
 
@@ -204,7 +183,7 @@ class VideoRoom
             'allowed' => $allowed,
         ])->bailIfInvalidPluginResponse();
 
-        $response = $this->janus->server()->getPluginResponse();
+        $response = $this->getPluginResponse();
 
         $this->disconnect();
 
@@ -248,7 +227,7 @@ class VideoRoom
             'room' => $room,
         ])->bailIfInvalidPluginResponse('participants');
 
-        $participants = $this->janus->server()->getPluginResponse('participants');
+        $participants = $this->getPluginResponse('participants');
 
         $this->disconnect();
 
@@ -274,63 +253,5 @@ class VideoRoom
         $this->disconnect();
 
         return true;
-    }
-
-    /**
-     * Disconnect from the server if enabled or forced.
-     *
-     * @param bool $force
-     * @return $this
-     * @throws JanusApiException
-     */
-    public function disconnect(bool $force = false): self
-    {
-        if ($this->shouldDisconnect || $force) {
-            $this->janus->disconnect();
-        }
-
-        return $this;
-    }
-
-    /**
-     * Emit our message, initiating a connection/attachment if needed.
-     *
-     * @param array $message
-     * @return $this
-     * @throws JanusApiException
-     */
-    private function emit(array $message): self
-    {
-        if ($this->janus->server()->isAttached()
-            && $this->janus->server()->getPlugin() === self::PLUGIN) {
-            $this->janus->message($message);
-
-            return $this;
-        }
-
-        $this->janus
-            ->connect()
-            ->attach(self::PLUGIN)
-            ->message($message);
-
-        return $this;
-    }
-
-    /**
-     * Check if the plugin response we expect is valid, or bail.
-     *
-     * @param string $success
-     * @throws JanusPluginException
-     */
-    private function bailIfInvalidPluginResponse(string $success = 'success'): void
-    {
-        if ($this->janus->server()->getPluginResponse('videoroom') !== $success) {
-            $data = [
-                'payload' => $this->janus->server()->getApiPayload(),
-                'response' => $this->janus->server()->getApiResponse(),
-            ];
-
-            throw new JanusPluginException('Janus Plugin Error | '.self::PLUGIN.' | '.json_encode($data));
-        }
     }
 }
