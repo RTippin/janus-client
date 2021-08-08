@@ -61,7 +61,7 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_gets_success_pong()
+    public function it_gets_success_ping()
     {
         Http::fake([
             self::Endpoint => Http::response(['janus' => 'pong']),
@@ -77,7 +77,7 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_gets_failed_pong_if_janus_not_pong()
+    public function it_gets_failed_ping_if_janus_not_pong()
     {
         Http::fake([
             self::Endpoint => Http::response(['janus' => 'unknown']),
@@ -89,7 +89,7 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_gets_failed_pong_if_server_throws_exception()
+    public function it_gets_failed_ping_if_server_throws_exception()
     {
         Http::fake([
             self::Endpoint => Http::response(null, 500),
@@ -252,13 +252,13 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_sends_trickle_candidate()
+    public function it_sends_trickle()
     {
         Http::fake([
             self::Endpoint => Http::response(self::SuccessResponse),
         ]);
 
-        $this->janus->trickleCandidate('candidate');
+        $this->janus->trickle('candidate');
 
         Http::assertSent(function (Request $request) {
             return $request['janus'] === 'trickle'

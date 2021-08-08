@@ -30,7 +30,7 @@ class Server
     /**
      * @var bool
      */
-    private bool $selfSigned;
+    private bool $verifySSL;
 
     /**
      * @var null|float
@@ -73,8 +73,8 @@ class Server
     public function __construct()
     {
         $this->setServerEndpoint(config('janus.server_endpoint'))
-            ->setAdminServerEndpoint(config('janus.server_admin_endpoint'))
-            ->setSelfSigned(config('janus.backend_ssl'))
+            ->setAdminServerEndpoint(config('janus.admin_server_endpoint'))
+            ->setVerifySSL(config('janus.verify_ssl'))
             ->setApiSecret(config('janus.api_secret'));
     }
 
@@ -122,12 +122,12 @@ class Server
     }
 
     /**
-     * @param bool $selfSigned
+     * @param bool $verifySSL
      * @return $this
      */
-    public function setSelfSigned(bool $selfSigned): self
+    public function setVerifySSL(bool $verifySSL): self
     {
-        $this->selfSigned = $selfSigned;
+        $this->verifySSL = $verifySSL;
 
         return $this;
     }
@@ -261,7 +261,7 @@ class Server
 
         try {
             $response = Http::timeout(15)
-                ->withOptions(['verify' => $this->selfSigned])
+                ->withOptions(['verify' => $this->verifySSL])
                 ->post($uri, $this->apiPayload)
                 ->throw();
         } catch (Throwable $e) {
@@ -293,7 +293,7 @@ class Server
 
         try {
             $response = Http::timeout(15)
-                ->withOptions(['verify' => $this->selfSigned])
+                ->withOptions(['verify' => $this->verifySSL])
                 ->get($uri)
                 ->throw();
         } catch (Throwable $e) {

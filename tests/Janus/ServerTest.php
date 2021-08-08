@@ -26,7 +26,7 @@ class ServerTest extends JanusTestCase
             'serverEndpoint' => 'http://janus.test',
             'adminServerEndpoint' => 'http://janus.test/admin',
             'apiSecret' => 'api-secret',
-            'selfSigned' => false,
+            'verifySSL' => false,
             'latencyStart' => null,
             'latencyEnd' => null,
             'sessionId' => null,

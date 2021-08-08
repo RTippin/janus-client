@@ -199,7 +199,7 @@ class Janus
      * @return $this
      * @throws JanusApiException
      */
-    public function trickleCandidate($candidate): self
+    public function trickle($candidate): self
     {
         $this->server->post([
             'janus' => 'trickle',
