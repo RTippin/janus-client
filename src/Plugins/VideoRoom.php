@@ -67,7 +67,7 @@ class VideoRoom extends BasePlugin
     {
         $this->emit(['request' => 'list'])->bailIfInvalidPluginResponse();
 
-        $list = $this->getPluginResponse('list');
+        $list = $this->getPluginResponse();
 
         $this->disconnect();
 
@@ -78,17 +78,17 @@ class VideoRoom extends BasePlugin
      * Check if janus has a video room with ID.
      *
      * @param int $room
-     * @return bool
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
-    public function exists(int $room): bool
+    public function exists(int $room): array
     {
         $this->emit([
             'request' => 'exists',
             'room' => $room,
         ])->bailIfInvalidPluginResponse();
 
-        $exists = $this->getPluginResponse('exists') ?? false;
+        $exists = $this->getPluginResponse();
 
         $this->disconnect();
 
@@ -125,15 +125,14 @@ class VideoRoom extends BasePlugin
 
         $this->emit($payload)->bailIfInvalidPluginResponse('created');
 
-        $room = $this->getPluginResponse('room');
+        $create = $this->getPluginResponse();
 
         $this->disconnect();
 
-        return [
-            'room' => $room,
+        return array_merge($create, [
             'pin' => $payload['pin'] ?: null,
             'secret' => $payload['secret'] ?: null,
-        ];
+        ]);
     }
 
     /**
@@ -142,10 +141,12 @@ class VideoRoom extends BasePlugin
      * @param int $room
      * @param array $params
      * @param string|null $secret
-     * @return bool
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
-    public function edit(int $room, array $params, ?string $secret = null): bool
+    public function edit(int $room,
+                         array $params,
+                         ?string $secret = null): array
     {
         $payload = array_merge([
             'request' => 'edit',
@@ -155,9 +156,11 @@ class VideoRoom extends BasePlugin
 
         $this->emit($payload)->bailIfInvalidPluginResponse('edited');
 
+        $edit = $this->getPluginResponse();
+
         $this->disconnect();
 
-        return true;
+        return $edit;
     }
 
     /**
@@ -167,13 +170,13 @@ class VideoRoom extends BasePlugin
      * @param string $action
      * @param array|null $allowed
      * @param string|null $secret
-     * @return array|null
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
     public function allowed(int $room,
                             string $action,
                             ?array $allowed = null,
-                            ?string $secret = null): ?array
+                            ?string $secret = null): array
     {
         $this->emit([
             'request' => 'allowed',
@@ -183,11 +186,11 @@ class VideoRoom extends BasePlugin
             'allowed' => $allowed ?: '',
         ])->bailIfInvalidPluginResponse();
 
-        $response = $this->getPluginResponse('allowed');
+        $allowed = $this->getPluginResponse();
 
         $this->disconnect();
 
-        return $response;
+        return $allowed;
     }
 
     /**
@@ -196,12 +199,12 @@ class VideoRoom extends BasePlugin
      * @param int $room
      * @param int $participantID
      * @param string|null $secret
-     * @return bool
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
     public function kick(int $room,
                          int $participantID,
-                         ?string $secret = null): bool
+                         ?string $secret = null): array
     {
         $this->emit([
             'request' => 'kick',
@@ -210,7 +213,11 @@ class VideoRoom extends BasePlugin
             'id' => $participantID,
         ])->bailIfInvalidPluginResponse();
 
-        return true;
+        $kick = $this->getPluginResponse();
+
+        $this->disconnect();
+
+        return $kick;
     }
 
     /**
@@ -227,7 +234,7 @@ class VideoRoom extends BasePlugin
             'room' => $room,
         ])->bailIfInvalidPluginResponse('participants');
 
-        $participants = $this->getPluginResponse('participants');
+        $participants = $this->getPluginResponse();
 
         $this->disconnect();
 
@@ -235,14 +242,37 @@ class VideoRoom extends BasePlugin
     }
 
     /**
+     * List all the forwarders in a specific room.
+     *
+     * @param int $room
+     * @param string|null $secret
+     * @return array
+     * @throws JanusApiException|JanusPluginException
+     */
+    public function listForwarders(int $room, ?string $secret = null): array
+    {
+        $this->emit([
+            'request' => 'listforwarders',
+            'room' => $room,
+            'secret' => $secret ?: '',
+        ])->bailIfInvalidPluginResponse('forwarders');
+
+        $list = $this->getPluginResponse();
+
+        $this->disconnect();
+
+        return $list;
+    }
+
+    /**
      * Destroy a room given the room ID and optional secret.
      *
      * @param int $room
      * @param string|null $secret
-     * @return bool
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
-    public function destroy(int $room, ?string $secret = null): bool
+    public function destroy(int $room, ?string $secret = null): array
     {
         $this->emit([
             'request' => 'destroy',
@@ -250,9 +280,11 @@ class VideoRoom extends BasePlugin
             'secret' => $secret ?: '',
         ])->bailIfInvalidPluginResponse('destroyed');
 
+        $destroy = $this->getPluginResponse();
+
         $this->disconnect();
 
-        return true;
+        return $destroy;
     }
 
     /**
@@ -263,14 +295,14 @@ class VideoRoom extends BasePlugin
      * @param bool $mute
      * @param string|null $mid
      * @param string|null $secret
-     * @return bool
+     * @return array
      * @throws JanusApiException|JanusPluginException
      */
     public function moderate(int $room,
                              int $participantID,
                              bool $mute,
                              ?string $mid = null,
-                             ?string $secret = null): bool
+                             ?string $secret = null): array
     {
         $this->emit([
             'request' => 'moderate',
@@ -281,9 +313,11 @@ class VideoRoom extends BasePlugin
             'secret' => $secret ?: '',
         ])->bailIfInvalidPluginResponse();
 
+        $moderate = $this->getPluginResponse();
+
         $this->disconnect();
 
-        return true;
+        return $moderate;
     }
 
     /**
@@ -292,13 +326,13 @@ class VideoRoom extends BasePlugin
      * @param int $room
      * @param bool $record
      * @param string|null $secret
-     * @return bool
+     * @return array
      * @throws JanusApiException
      * @throws JanusPluginException
      */
     public function enableRecording(int $room,
                                     bool $record,
-                                    ?string $secret = null): bool
+                                    ?string $secret = null): array
     {
         $this->emit([
             'request' => 'enable_recording',
@@ -307,8 +341,10 @@ class VideoRoom extends BasePlugin
             'secret' => $secret ?: '',
         ])->bailIfInvalidPluginResponse();
 
+        $recording = $this->getPluginResponse();
+
         $this->disconnect();
 
-        return $record;
+        return $recording;
     }
 }

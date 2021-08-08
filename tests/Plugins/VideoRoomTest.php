@@ -83,7 +83,7 @@ class VideoRoomTest extends JanusTestCase
                 ->push(self::SuccessResponse), //disconnect
         ]);
 
-        $this->assertSame([1, 2, 3], $this->videoRoom->list());
+        $this->assertSame($plugin['plugindata']['data'], $this->videoRoom->list());
     }
 
     /** @test */
@@ -127,7 +127,7 @@ class VideoRoomTest extends JanusTestCase
                 ->push(self::SuccessResponse), //disconnect
         ]);
 
-        $this->assertTrue($this->videoRoom->exists(1234));
+        $this->assertTrue($this->videoRoom->exists(1234)['exists']);
     }
 
     /** @test */
@@ -149,7 +149,7 @@ class VideoRoomTest extends JanusTestCase
                 ->push(self::SuccessResponse), //disconnect
         ]);
 
-        $this->assertFalse($this->videoRoom->exists(1234));
+        $this->assertFalse($this->videoRoom->exists(1234)['exists']);
     }
 
     /** @test */
@@ -278,7 +278,7 @@ class VideoRoomTest extends JanusTestCase
         $edit = $this->videoRoom->withoutDisconnect()->edit(1234, ['edited' => true]);
         $payload = $this->videoRoom->getPluginPayload('body');
 
-        $this->assertTrue($edit);
+        $this->assertSame($plugin['plugindata']['data'], $edit);
         $this->assertSame('edit', $payload['request']);
         $this->assertSame(1234, $payload['room']);
         $this->assertTrue($payload['edited']);
@@ -302,10 +302,9 @@ class VideoRoomTest extends JanusTestCase
                 ->push(array_merge(self::SuccessResponse, $plugin)), //message
         ]);
 
-        $edit = $this->videoRoom->withoutDisconnect()->edit(1234, ['edited' => true], 'secret');
+        $this->videoRoom->withoutDisconnect()->edit(1234, ['edited' => true], 'secret');
         $payload = $this->videoRoom->getPluginPayload('body');
 
-        $this->assertTrue($edit);
         $this->assertSame('secret', $payload['secret']);
     }
 
@@ -357,7 +356,7 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame('add', $payload['action']);
         $this->assertEmpty($payload['secret']);
         $this->assertSame(['token'], $payload['allowed']);
-        $this->assertSame([1, 2, 3], $allowed);
+        $this->assertSame($plugin['plugindata']['data'], $allowed);
     }
 
     /** @test */
@@ -382,7 +381,7 @@ class VideoRoomTest extends JanusTestCase
 
         $this->assertSame('enable', $payload['action']);
         $this->assertSame('secret', $payload['secret']);
-        $this->assertNull($allowed);
+        $this->assertSame($plugin['plugindata']['data'], $allowed);
     }
 
     /** @test */
@@ -431,7 +430,7 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame(1234, $payload['room']);
         $this->assertSame(5678, $payload['id']);
         $this->assertEmpty($payload['secret']);
-        $this->assertTrue($kick);
+        $this->assertSame($plugin['plugindata']['data'], $kick);
     }
 
     /** @test */
@@ -451,11 +450,10 @@ class VideoRoomTest extends JanusTestCase
                 ->push(array_merge(self::SuccessResponse, $plugin)), //message
         ]);
 
-        $kick = $this->videoRoom->withoutDisconnect()->kick(1234, 5678, 'secret');
+        $this->videoRoom->withoutDisconnect()->kick(1234, 5678, 'secret');
         $payload = $this->videoRoom->getPluginPayload('body');
 
         $this->assertSame('secret', $payload['secret']);
-        $this->assertTrue($kick);
     }
 
     /** @test */
@@ -503,7 +501,7 @@ class VideoRoomTest extends JanusTestCase
 
         $this->assertSame('listparticipants', $payload['request']);
         $this->assertSame(1234, $payload['room']);
-        $this->assertSame([1, 2, 3], $list);
+        $this->assertSame($plugin['plugindata']['data'], $list);
     }
 
     /** @test */
@@ -535,6 +533,7 @@ class VideoRoomTest extends JanusTestCase
             'plugindata' => [
                 'data' => [
                     'videoroom' => 'destroyed',
+                    'room' => 1234,
                 ],
             ],
         ];
@@ -551,7 +550,7 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame('destroy', $payload['request']);
         $this->assertSame(1234, $payload['room']);
         $this->assertEmpty($payload['secret']);
-        $this->assertTrue($destroy);
+        $this->assertSame($plugin['plugindata']['data'], $destroy);
     }
 
     /** @test */
@@ -571,11 +570,10 @@ class VideoRoomTest extends JanusTestCase
                 ->push(array_merge(self::SuccessResponse, $plugin)), //message
         ]);
 
-        $destroy = $this->videoRoom->withoutDisconnect()->destroy(1234, 'secret');
+        $this->videoRoom->withoutDisconnect()->destroy(1234, 'secret');
         $payload = $this->videoRoom->getPluginPayload('body');
 
         $this->assertSame('secret', $payload['secret']);
-        $this->assertTrue($destroy);
     }
 
     /** @test */
@@ -626,7 +624,7 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame('mid', $payload['mid']);
         $this->assertTrue($payload['mute']);
         $this->assertEmpty($payload['secret']);
-        $this->assertTrue($moderate);
+        $this->assertSame($plugin['plugindata']['data'], $moderate);
     }
 
     /** @test */
@@ -646,13 +644,12 @@ class VideoRoomTest extends JanusTestCase
                 ->push(array_merge(self::SuccessResponse, $plugin)), //message
         ]);
 
-        $moderate = $this->videoRoom->withoutDisconnect()->moderate(1234, 5678, false, null, 'secret');
+        $this->videoRoom->withoutDisconnect()->moderate(1234, 5678, false, null, 'secret');
         $payload = $this->videoRoom->getPluginPayload('body');
 
         $this->assertEmpty($payload['mid']);
         $this->assertFalse($payload['mute']);
         $this->assertSame('secret', $payload['secret']);
-        $this->assertTrue($moderate);
     }
 
     /** @test */
@@ -684,6 +681,7 @@ class VideoRoomTest extends JanusTestCase
             'plugindata' => [
                 'data' => [
                     'videoroom' => 'success',
+                    'record' => true,
                 ],
             ],
         ];
@@ -701,16 +699,17 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame(1234, $payload['room']);
         $this->assertTrue($payload['record']);
         $this->assertEmpty($payload['secret']);
-        $this->assertTrue($record);
+        $this->assertSame($plugin['plugindata']['data'], $record);
     }
 
     /** @test */
-    public function it_enables_video_room_recording_with_secret()
+    public function it_disables_video_room_recording_with_secret()
     {
         $plugin = [
             'plugindata' => [
                 'data' => [
                     'videoroom' => 'success',
+                    'record' => false,
                 ],
             ],
         ];
@@ -728,7 +727,7 @@ class VideoRoomTest extends JanusTestCase
         $this->assertSame(1234, $payload['room']);
         $this->assertFalse($payload['record']);
         $this->assertSame('secret', $payload['secret']);
-        $this->assertFalse($record);
+        $this->assertSame($plugin['plugindata']['data'], $record);
     }
 
     /** @test */
@@ -751,5 +750,81 @@ class VideoRoomTest extends JanusTestCase
         $this->expectException(JanusPluginException::class);
 
         $this->videoRoom->enableRecording(1234, true);
+    }
+
+    /** @test */
+    public function it_lists_video_room_forwarders()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'forwarders',
+                    'room' => 1234,
+                    'rtp_forwarders' => [1, 2, 3],
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $list = $this->videoRoom->withoutDisconnect()->listForwarders(1234);
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('listforwarders', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertEmpty($payload['secret']);
+        $this->assertSame($plugin['plugindata']['data'], $list);
+    }
+
+    /** @test */
+    public function it_lists_video_room_forwarders_with_secret()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'forwarders',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $list = $this->videoRoom->withoutDisconnect()->listForwarders(1234, 'secret');
+        $payload = $this->videoRoom->getPluginPayload('body');
+
+        $this->assertSame('listforwarders', $payload['request']);
+        $this->assertSame(1234, $payload['room']);
+        $this->assertSame('secret', $payload['secret']);
+        $this->assertSame($plugin['plugindata']['data'], $list);
+    }
+
+    /** @test */
+    public function it_throws_exception_if_invalid_forwarders_response()
+    {
+        $plugin = [
+            'plugindata' => [
+                'data' => [
+                    'videoroom' => 'error',
+                ],
+            ],
+        ];
+        Http::fake([
+            self::Endpoint => Http::sequence()
+                ->push(self::SuccessResponse) //connect
+                ->push(self::SuccessResponse) //attach
+                ->push(array_merge(self::SuccessResponse, $plugin)), //message
+        ]);
+
+        $this->expectException(JanusPluginException::class);
+
+        $this->videoRoom->listForwarders(1234);
     }
 }
