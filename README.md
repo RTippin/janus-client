@@ -115,17 +115,17 @@ class JanusController
     }
 }
 ```
-## Info
+### `info()`
 - Returns the janus server info array.
 ```php
 Janus::info();
 ```
-## Ping
+### `ping()`
 - Ping will always return an array (even if an exception is thrown), containing `pong` as true|false, along with server latency.
 ```php
 Janus::ping();
 ```
-## Debug
+### `debug(bool $debug = true)`
 - Enable debugging/dumps on the fly by calling to the `debug` method on `Janus`. This will dump each HTTP call's payload, response, and latency.
 ```php
 use RTippin\Janus\Facades\Janus;
@@ -158,37 +158,37 @@ array:2 [▼
 
 "It dumps inline for each http call!"
 ```
-## Connect
+### `connect()`
 - Connect will initiate a handshake with janus to set our session ID for any following request. This is a fluent method and can be chained.
 ```php
 Janus::connect();
 ```
-## Attach
+### `attach(string $plugin)`
 - Attach to a janus plugin to set our handle ID. All following API calls in this request cycles will go to this plugin unless you call detach or disconnect. This is a fluent method and can be chained.
 ```php
 Janus::attach('janus.plugin.name');
 ```
-## Detach
+### `detach()`
 - Detach from the current plugin/handle. This is a fluent method and can be chained.
 ```php
 Janus::detach();
 ```
-## Disconnect
+### `disconnect()`
 - Disconnect from janus, destroying our session and handle/plugin. This is a fluent method and can be chained.
 ```php
 Janus::disconnect();
 ```
-## Message
+### `message(array $message, $jsep = null)`
 - Send janus our message. This is usually called once attached to a plugin, and sends commands to janus. This is a fluent method and can be chained.
 ```php
 Janus::message(['request' => 'list']);
 ```
-## Trickle
+### `trickle($candidate)`
 - Send a trickle candidate to janus. This is a fluent method and can be chained.
 ```php
 Janus::trickle('candidate information');
 ```
-## Server
+### `server()`
 - Returns the underlying janus server class, allowing you to set configs, or access current payloads/responses in the cycle.
 ```php
 use RTippin\Janus\Facades\Janus;
@@ -234,7 +234,9 @@ Janus::disconnect();
 
 - You may access the video room plugin through the core `Janus` class/facade, or dependency injection of the core `VideoRoom` class.
 - All videoroom methods will return the plugin response from janus directly. It is up to you to check the arrays for the data you need.
-- Each method completes a full cycle (connect, attach, message, disconnect). If you with to use many commands in one cycle, you may
+- Each method completes a full cycle (connect, attach, message, disconnect). If you with to use many commands in one cycle: 
+  - Call to `Janus::videoRoom()->withoutDisconnect()` before any methods are called.
+  - When your methods have completed, you must manually force disconnect, `Janus::videoRoom()->disconnect(true)`.
 
 **Using Facade**
 ```php
@@ -260,33 +262,87 @@ class VideoRoomController
     }
 }
 ```
-## List
+### `list()`
 - Returns a list of the available rooms (excluded those configured or created as private rooms).
 ```php
 $list = Janus::videoRoom()->list();
 ```
-## Exists
+### `exists(int $room)`
 - Check whether a room exists.
 ```php
 $exists = Janus::videoRoom()->exists(12345678);
 ```
-## List
-- Returns a list of the available rooms (excluded those configured or created as private rooms).
+### `create(array $params = [], bool $usePin = true, bool $useSecret = true)`
+- Create a new video room. By default, we will create a `PIN` and `SECRET` for you, as well as set certain properties. Any `params` you set will override any of our defaults.
+    - We will merge the PIN/SECRET with the returned array from the janus plugin response, so that you may save it if needed.
 ```php
-$list = Janus::videoRoom()->list();
+$room = Janus::videoRoom()->create([
+    'description' => 'My first room!',
+    'publishers' => 10,
+    'bitrate' => 1024000,
+    'is_private' => true,
+]);
 ```
-## List
-- Returns a list of the available rooms (excluded those configured or created as private rooms).
+### `edit(int $room, array $params, ?string $secret = null)`
+- Edit the allowed properties of an existing room.
 ```php
-$list = Janus::videoRoom()->list();
-```
-## List
-- Returns a list of the available rooms (excluded those configured or created as private rooms).
-```php
-$list = Janus::videoRoom()->list();
-```
+$newProperties = [
+    'new_description' => 'First room!',
+    'new_bitrate' => 600000,
+];
 
-## WIP VideoRoom Docs
+$edit = Janus::videoRoom()->edit(12345678, $newProperties, 'SECRET');
+```
+### `allowed(int $room, string $action, ?array $allowed = null, ?string $secret = null)`
+- You can configure whether to check tokens or add/remove people who can join a room.
+```php
+$allowed = Janus::videoRoom()->allowed(12345678, 'remove', ['token'], 'SECRET');
+```
+### `kick(int $room, int $participantID, ?string $secret = null)`
+- Kick a participant from the room.
+```php
+$kick = Janus::videoRoom()->kick(12345678, 987654321, 'SECRET');
+```
+### `listParticipants(int $room)`
+- Get a list of the participants in a specific room.
+```php
+$participants = Janus::videoRoom()->listParticipants(12345678);
+```
+### `listForwarders(int $room, ?string $secret = null)`
+- Get a list of all the forwarders in a specific room.
+```php
+$forwarders = Janus::videoRoom()->listForwarders(12345678, 'SECRET');
+```
+### `destroy(int $room, ?string $secret = null)`
+- Destroy an existing video room.
+```php
+$destroy = Janus::videoRoom()->destroy(12345678, 'SECRET');
+```
+### `moderate(int $room, int $participantID, bool $mute, ?string $mid = null, ?string $secret = null)`
+- Forcibly mute/unmute any of the media streams sent by participants.
+```php
+$moderate = Janus::videoRoom()->moderate(12345678, 987654321, true, 'm-line' 'SECRET');
+```
+### `enableRecording(int $room, bool $record, ?string $secret = null)`
+- Enable or disable recording on all participants while the conference is in progress.
+```php
+$record = Janus::videoRoom()->enableRecording(12345678, true, 'SECRET');
+```
+## Example Cycle using many methods without disconnecting between them.
+```php
+use RTippin\Janus\Facades\Janus;
+
+//Disable disconnect between each method call.   
+Janus::videoRoom()->withoutDisconnect();
+
+//Run methods as needed. Connect and attach will only be called once.
+if (Janus::videoRoom()->exists(12345678)['exists']) {
+    Janus::videoRoom()->destroy(12345678, 'SECRET');
+}
+
+//Disconnect and reset all janus values.
+Janus::disconnect();
+```
 
 ---
 
