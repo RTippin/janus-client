@@ -230,7 +230,11 @@ Janus::disconnect();
 
 # Video Room
 
+### For full docs relating to the video room plugin and its responses, please check the [Official Docs][link-videoroom]
+
 - You may access the video room plugin through the core `Janus` class/facade, or dependency injection of the core `VideoRoom` class.
+- All videoroom methods will return the plugin response from janus directly. It is up to you to check the arrays for the data you need.
+- Each method completes a full cycle (connect, attach, message, disconnect). If you with to use many commands in one cycle, you may
 
 **Using Facade**
 ```php
@@ -256,7 +260,31 @@ class VideoRoomController
     }
 }
 ```
-
+## List
+- Returns a list of the available rooms (excluded those configured or created as private rooms).
+```php
+$list = Janus::videoRoom()->list();
+```
+## Exists
+- Check whether a room exists.
+```php
+$exists = Janus::videoRoom()->exists(12345678);
+```
+## List
+- Returns a list of the available rooms (excluded those configured or created as private rooms).
+```php
+$list = Janus::videoRoom()->list();
+```
+## List
+- Returns a list of the available rooms (excluded those configured or created as private rooms).
+```php
+$list = Janus::videoRoom()->list();
+```
+## List
+- Returns a list of the available rooms (excluded those configured or created as private rooms).
+```php
+$list = Janus::videoRoom()->list();
+```
 
 ## WIP VideoRoom Docs
 
@@ -280,3 +308,4 @@ class VideoRoomController
 [link-license]: https://packagist.org/packages/rtippin/janus-client
 [link-styleci]: https://styleci.io/repos/387571926
 [link-janus]: https://janus.conf.meetecho.com/docs/index.html
+[link-videoroom]: https://janus.conf.meetecho.com/docs/videoroom.html

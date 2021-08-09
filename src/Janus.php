@@ -2,7 +2,6 @@
 
 namespace RTippin\Janus;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
 use RTippin\Janus\Exceptions\JanusApiException;
 use RTippin\Janus\Plugins\VideoRoom;
 
@@ -17,6 +16,11 @@ class Janus
      * @var Server
      */
     private Server $server;
+
+    /**
+     * @var VideoRoom|null
+     */
+    private ?VideoRoom $videoRoom = null;
 
     /**
      * Janus constructor.
@@ -63,11 +67,14 @@ class Janus
      * Get the VideoRoom plugin client instance.
      *
      * @return VideoRoom
-     * @throws BindingResolutionException
      */
     public function videoRoom(): VideoRoom
     {
-        return app()->makeWith(VideoRoom::class, ['janus' => $this]);
+        if (! is_null($this->videoRoom)) {
+            return $this->videoRoom;
+        }
+
+        return $this->videoRoom = app(VideoRoom::class);
     }
 
     /**

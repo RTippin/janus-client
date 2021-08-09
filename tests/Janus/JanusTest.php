@@ -45,9 +45,12 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
-    public function it_resolves_videoroom()
+    public function it_resolves_videoroom_once()
     {
+        $videoROom = $this->janus->videoRoom();
+
         $this->assertInstanceOf(VideoRoom::class, $this->janus->videoRoom());
+        $this->assertSame($videoROom, $this->janus->videoRoom());
     }
 
     /** @test */
