@@ -106,7 +106,7 @@ class JanusTest extends JanusTestCase
         Http::fake([
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
-                    'id' => '1234',
+                    'id' => 1234,
                 ],
             ])),
         ]);
@@ -116,7 +116,7 @@ class JanusTest extends JanusTestCase
         Http::assertSent(function (Request $request) {
             return $request['janus'] === 'create';
         });
-        $this->assertSame('1234', $this->janus->server()->getCurrentDetails()['sessionId']);
+        $this->assertSame(1234, $this->janus->server()->getCurrentDetails()['sessionId']);
     }
 
     /** @test */
@@ -125,7 +125,7 @@ class JanusTest extends JanusTestCase
         Http::fake([
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
-                    'invalid' => '1234',
+                    'invalid' => 1234,
                 ],
             ])),
         ]);
@@ -141,7 +141,7 @@ class JanusTest extends JanusTestCase
         Http::fake([
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
-                    'id' => '5678',
+                    'id' => 5678,
                 ],
             ])),
         ]);
@@ -152,7 +152,7 @@ class JanusTest extends JanusTestCase
             return $request['janus'] === 'attach'
                 && $request['plugin'] === 'plugin';
         });
-        $this->assertSame('5678', $this->janus->server()->getCurrentDetails()['handleId']);
+        $this->assertSame(5678, $this->janus->server()->getCurrentDetails()['handleId']);
         $this->assertSame('plugin', $this->janus->server()->getCurrentDetails()['plugin']);
     }
 
@@ -162,7 +162,7 @@ class JanusTest extends JanusTestCase
         Http::fake([
             self::Endpoint => Http::response(array_merge(self::SuccessResponse, [
                 'data' => [
-                    'invalid' => '5678',
+                    'invalid' => 5678,
                 ],
             ])),
         ]);
@@ -179,8 +179,8 @@ class JanusTest extends JanusTestCase
         $this->janus
             ->server()
             ->setPlugin('plugin')
-            ->setSessionId('1234')
-            ->setHandleId('5678');
+            ->setSessionId(1234)
+            ->setHandleId(5678);
         Http::fake([
             self::Endpoint.'/1234/5678' => Http::response(self::SuccessResponse),
         ]);
@@ -190,7 +190,7 @@ class JanusTest extends JanusTestCase
         Http::assertSent(function (Request $request) {
             return $request['janus'] === 'detach';
         });
-        $this->assertSame('1234', $this->janus->server()->getCurrentDetails()['sessionId']);
+        $this->assertSame(1234, $this->janus->server()->getCurrentDetails()['sessionId']);
         $this->assertNull($this->janus->server()->getCurrentDetails()['handleId']);
         $this->assertNull($this->janus->server()->getCurrentDetails()['plugin']);
     }
@@ -201,8 +201,8 @@ class JanusTest extends JanusTestCase
         $this->janus
             ->server()
             ->setPlugin('plugin')
-            ->setSessionId('1234')
-            ->setHandleId('5678');
+            ->setSessionId(1234)
+            ->setHandleId(5678);
         Http::fake([
             self::Endpoint.'/1234' => Http::response(self::SuccessResponse),
         ]);

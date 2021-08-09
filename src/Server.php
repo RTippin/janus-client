@@ -48,14 +48,14 @@ class Server
     private ?float $latencyEnd = null;
 
     /**
-     * @var null|string
+     * @var null|int
      */
-    private ?string $sessionId = null;
+    private ?int $sessionId = null;
 
     /**
-     * @var null|string
+     * @var null|int
      */
-    private ?string $handleId = null;
+    private ?int $handleId = null;
 
     /**
      * @var string|null
@@ -150,10 +150,10 @@ class Server
     }
 
     /**
-     * @param string|null $sessionId
+     * @param int|null $sessionId
      * @return $this
      */
-    public function setSessionId(?string $sessionId): self
+    public function setSessionId(?int $sessionId): self
     {
         $this->sessionId = $sessionId;
 
@@ -161,10 +161,10 @@ class Server
     }
 
     /**
-     * @param string|null $handleId
+     * @param int|null $handleId
      * @return $this
      */
-    public function setHandleId(?string $handleId): self
+    public function setHandleId(?int $handleId): self
     {
         $this->handleId = $handleId;
 

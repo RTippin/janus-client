@@ -49,7 +49,7 @@ class ServerTest extends JanusTestCase
     /** @test */
     public function it_is_connected()
     {
-        $this->server->setSessionId('session');
+        $this->server->setSessionId(1234);
 
         $this->assertTrue($this->server->isConnected());
     }
@@ -66,8 +66,8 @@ class ServerTest extends JanusTestCase
     {
         $this->server
             ->setPlugin('plugin')
-            ->setSessionId('session')
-            ->setHandleId('handle');
+            ->setSessionId(1234)
+            ->setHandleId(5678);
 
         $this->assertTrue($this->server->isAttached());
         $this->assertSame('plugin', $this->server->getPlugin());
@@ -267,7 +267,7 @@ class ServerTest extends JanusTestCase
     /** @test */
     public function it_uses_session_in_uri_when_set()
     {
-        $this->server->setSessionId('1234');
+        $this->server->setSessionId(1234);
         Http::fake([
             self::Endpoint.'/1234' => Http::response(self::SuccessResponse),
         ]);
@@ -282,7 +282,7 @@ class ServerTest extends JanusTestCase
     /** @test */
     public function it_uses_session_and_handle_in_uri_when_set()
     {
-        $this->server->setSessionId('1234')->setHandleId('5678');
+        $this->server->setSessionId(1234)->setHandleId(5678);
         Http::fake([
             self::Endpoint.'/1234/5678' => Http::response(self::SuccessResponse),
         ]);
@@ -442,8 +442,8 @@ class ServerTest extends JanusTestCase
         $payload = ['data' => true];
         $response = array_merge(self::SuccessResponse, ['data' => 'test']);
         $this->server
-            ->setSessionId('1234')
-            ->setHandleId('5678')
+            ->setSessionId(1234)
+            ->setHandleId(5678)
             ->setPlugin('plugin');
         Http::fake([
             self::Endpoint.'/1234/5678' => Http::response($response),
@@ -453,8 +453,8 @@ class ServerTest extends JanusTestCase
 
         $details = $this->server->getCurrentDetails();
 
-        $this->assertSame('1234', $details['sessionId']);
-        $this->assertSame('5678', $details['handleId']);
+        $this->assertSame(1234, $details['sessionId']);
+        $this->assertSame(5678, $details['handleId']);
         $this->assertSame('plugin', $details['plugin']);
         $this->assertArrayHasKey('data', $details['apiPayload']);
         $this->assertSame($response, $details['apiResponse']);
