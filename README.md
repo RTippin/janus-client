@@ -271,7 +271,7 @@ Janus::disconnect(); //Main disconnect will always be run if called.
 Janus::videoRoom()->list();
 
 //Get response.
-$list = Janus::videoRoom()->getPluginPayload('list');
+$list = Janus::videoRoom()->getPluginResponse('list');
 ```
 ### `{JanusPlugin}->getPluginPayload(?string $key = null)`
 - Get the API payload for the last plugin method called.
