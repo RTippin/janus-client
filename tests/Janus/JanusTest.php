@@ -234,7 +234,7 @@ class JanusTest extends JanusTestCase
                 && $request['body']['message'] === 'test'
                 && ! isset($request['jsep']);
         });
-        $this->assertSame(self::SuccessResponse, $this->janus->server()->getApiResponse());
+        $this->assertSame(self::SuccessResponse, $this->janus->getApiResponse());
     }
 
     /** @test */
@@ -251,7 +251,7 @@ class JanusTest extends JanusTestCase
                 && $request['body']['message'] === 'test'
                 && $request['jsep']['extra'] === true;
         });
-        $this->assertSame(self::SuccessResponse, $this->janus->server()->getApiResponse());
+        $this->assertSame(self::SuccessResponse, $this->janus->getApiResponse());
     }
 
     /** @test */
@@ -267,6 +267,6 @@ class JanusTest extends JanusTestCase
             return $request['janus'] === 'trickle'
                 && $request['candidate'] === 'candidate';
         });
-        $this->assertSame(self::SuccessResponse, $this->janus->server()->getApiResponse());
+        $this->assertSame(self::SuccessResponse, $this->janus->getApiResponse());
     }
 }
