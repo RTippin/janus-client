@@ -10,7 +10,10 @@
 
 ### This package provides a client to fluently interact with your [Janus Gateway Server][link-janus]
 
-## Janus Support
+## Notes
+- More plugin support will be added soon.
+
+## Included
 - Core REST API wrapper to interact with janus.
 - VideoRoom plugin wrapper.
 
@@ -205,7 +208,7 @@ $payload = $server->getApiPayload();
 $latency = $server->getEndLatency();
 ```
 ## Example Cycle
-- Say we want to obtain a list of video rooms, 4 calls must be made. Once attached, we send janus our command message, and disconnect (to remove our session from your janus servers memory).
+- Say we want to obtain a list of video rooms, 4 calls must be made.
     - First we connect which sets our session id.
     - Then we want to attach to the video room plugin to set our handle id.
     - Once attached, we send janus our command message to list rooms.
@@ -228,15 +231,66 @@ Janus::disconnect();
 
 ----
 
+# Shared Plugin Methods
+
+### All Plugin methods will return the plugin response array from janus directly. 
+- `['plugindata']['data']` contents returned.
+
+**Examples using `VideoRoom` plugin**
+
+### `{JanusPlugin}->withoutDisconnect()` | `{JanusPlugin}->disconnect(bool $force = false)`
+- If you plan to use many commands in one cycle while attached to the same plugin, calling this method will only create one `connect` and `attach` call to reuse our session and handle ID's.
+- When you have completed all individual calls, you must manually call to the parent `Janus` to disconnect, or force it within the current plugin instance, using `disconnect(true)`.
+- These are fluent methods and can be chained.
+
+**Example video room call to remove all rooms**
+```php
+use RTippin\Janus\Facades\Janus;
+
+//Disable disconnects for plugin calls.
+Janus::videoRoom()->withoutDisconnect();
+
+//Grab list of rooms.
+$rooms = Janus::videoRoom()->list()['list'];
+
+//Destroy each room.
+foreach ($rooms as $room) {
+    Janus::videoRoom()->destroy($room['room']);
+}
+
+//Now disconnect to remove our session/handle.
+Janus::videoRoom()->disconnect(true); //Forced on current plugin instance.
+---------------------------------------------------------------------------
+Janus::disconnect(); //Main disconnect will always be run if called.
+```
+### `{JanusPlugin}->getPluginResponse(?string $key = null)`
+- Get the API response from the last plugin method called.
+    - `['plugindata']['data']` contents will be returned.
+```php
+//Make plugin call. 
+Janus::videoRoom()->list();
+
+//Get response.
+$list = Janus::videoRoom()->getPluginPayload('list');
+```
+### `{JanusPlugin}->getPluginPayload(?string $key = null)`
+- Get the API payload for the last plugin method called.
+```php
+//Make plugin call. 
+Janus::videoRoom()->list();
+
+//Get payload.
+$payload = Janus::videoRoom()->getPluginPayload();
+```
+
+----
+
 # Video Room
 
 ### For full docs relating to the video room plugin and its responses, please check the [Official Docs][link-videoroom]
 
 - You may access the video room plugin through the core `Janus` class/facade, or dependency injection of the core `VideoRoom` class.
-- All videoroom methods will return the plugin response from janus directly. It is up to you to check the arrays for the data you need.
-- Each method completes a full cycle (connect, attach, message, disconnect). If you with to use many commands in one cycle: 
-  - Call to `Janus::videoRoom()->withoutDisconnect()` before any methods are called.
-  - When your methods have completed, you must manually force disconnect, `Janus::videoRoom()->disconnect(true)`.
+- Each main janus method completes a full cycle (connect, attach, message, disconnect) unless you specify `withoutDisconnect()`.
 
 **Using Facade**
 ```php
@@ -332,12 +386,12 @@ $record = Janus::videoRoom()->enableRecording(12345678, true, 'SECRET');
 ```php
 use RTippin\Janus\Facades\Janus;
 
-//Disable disconnect between each method call.   
+//Disable disconnect between each method call.
 Janus::videoRoom()->withoutDisconnect();
 
 //Run methods as needed. Connect and attach will only be called once.
 if (Janus::videoRoom()->exists(12345678)['exists']) {
-    Janus::videoRoom()->destroy(12345678, 'SECRET');
+    Janus::videoRoom()->destroy(12345678);
 }
 
 //Disconnect and reset all janus values.

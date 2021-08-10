@@ -235,10 +235,11 @@ class Janus
     /**
      * Get the full api response for the last request in this cycle.
      *
-     * @return array|mixed|null
+     * @param string|null $key
+     * @return mixed|null
      */
-    public function getApiResponse()
+    public function getApiResponse(?string $key = null)
     {
-        return $this->server->getApiResponse();
+        return $this->server->getApiResponse($key);
     }
 }

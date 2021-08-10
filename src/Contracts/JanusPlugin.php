@@ -24,18 +24,22 @@ interface JanusPlugin
     public function getPluginShortName(): string;
 
     /**
+     * Return the parent janus instance.
+     *
      * @return Janus
      */
     public function janus(): Janus;
 
     /**
+     * Get the last API payload from the parent server instance.
+     *
      * @param string|null $key
      * @return mixed|null
      */
     public function getPluginPayload(?string $key = null);
 
     /**
-     * Get the response from a plugin.
+     * Get the API response from a plugin ['plugindata']['data'] contents will be returned.
      *
      * @return mixed|null
      */
