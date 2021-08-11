@@ -221,6 +221,23 @@ class JanusTest extends JanusTestCase
     }
 
     /** @test */
+    public function it_disconnects_without_http_call_if_no_session_set()
+    {
+        $this->janus
+            ->server()
+            ->setPlugin('plugin')
+            ->setHandleId(5678);
+        Http::fake();
+
+        $this->janus->disconnect();
+
+        Http::assertNothingSent();
+        $this->assertNull($this->janus->server()->getCurrentDetails()['sessionId']);
+        $this->assertNull($this->janus->server()->getCurrentDetails()['handleId']);
+        $this->assertNull($this->janus->server()->getCurrentDetails()['plugin']);
+    }
+
+    /** @test */
     public function it_sends_message()
     {
         Http::fake([

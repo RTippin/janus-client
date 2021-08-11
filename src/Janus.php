@@ -180,10 +180,12 @@ class Janus
     {
         $this->server->setPlugin(null)->setHandleId(null);
 
-        try {
-            $this->server->post(['janus' => 'destroy']);
-        } catch (JanusApiException $e) {
-            //State will be cleared, continue on!
+        if ($this->server->isConnected()) {
+            try {
+                $this->server->post(['janus' => 'destroy']);
+            } catch (JanusApiException $e) {
+                //State will be cleared, continue on!
+            }
         }
 
         $this->server->setSessionId(null);

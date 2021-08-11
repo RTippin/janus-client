@@ -96,6 +96,8 @@ abstract class BasePlugin implements JanusPlugin
             return $this;
         }
 
+        $this->janus->disconnect();
+
         $this->janus
             ->connect()
             ->attach($this->getPluginName())

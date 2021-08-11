@@ -29,8 +29,13 @@ class VideoRoomTest extends JanusTestCase
     /** @test */
     public function it_can_disconnect()
     {
+        $this->videoRoom
+            ->janus()
+            ->server()
+            ->setSessionId(1234)
+            ->setHandleId(5678);
         Http::fake([
-            self::Endpoint => Http::response(self::SuccessResponse),
+            self::Endpoint.'/1234' => Http::response(self::SuccessResponse),
         ]);
 
         $this->videoRoom->disconnect();
@@ -53,8 +58,13 @@ class VideoRoomTest extends JanusTestCase
     /** @test */
     public function it_can_force_disconnect()
     {
+        $this->videoRoom
+            ->janus()
+            ->server()
+            ->setSessionId(1234)
+            ->setHandleId(5678);
         Http::fake([
-            self::Endpoint => Http::response(self::SuccessResponse),
+            self::Endpoint.'/1234' => Http::response(self::SuccessResponse),
         ]);
 
         $this->videoRoom->withoutDisconnect()->disconnect(true);
