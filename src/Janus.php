@@ -8,6 +8,7 @@ use RTippin\Janus\Plugins\VideoRoom;
 /**
  * Laravel Janus Client - General purpose WebRTC server.
  * Created by: Richard Tippin.
+ *
  * @link https://janus.conf.meetecho.com/docs/
  */
 class Janus
@@ -33,7 +34,7 @@ class Janus
     /**
      * Enable or disable debug dumps for this cycle.
      *
-     * @param bool $debug
+     * @param  bool  $debug
      * @return $this
      */
     public function debug(bool $debug = true): self
@@ -81,6 +82,7 @@ class Janus
      * Retrieve the janus server instance details.
      *
      * @return array
+     *
      * @throws JanusApiException
      */
     public function info(): array
@@ -119,6 +121,7 @@ class Janus
      * Connect with janus to set the session ID for this request cycle.
      *
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function connect(): self
@@ -136,8 +139,9 @@ class Janus
      * Attach to a janus plugin to set our handle ID. All following API calls
      * in this request cycles will go to this plugin unless you call detach.
      *
-     * @param string $plugin
+     * @param  string  $plugin
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function attach(string $plugin): self
@@ -160,6 +164,7 @@ class Janus
      * Detach from the current plugin/handle.
      *
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function detach(): self
@@ -196,9 +201,10 @@ class Janus
     /**
      * Send janus our message.
      *
-     * @param array $message
-     * @param string|array|null $jsep
+     * @param  array  $message
+     * @param  string|array|null  $jsep
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function message(array $message, $jsep = null): self
@@ -220,8 +226,9 @@ class Janus
     /**
      * Send janus our trickle.
      *
-     * @param string|array $candidate
+     * @param  string|array  $candidate
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function trickle($candidate): self
@@ -237,7 +244,7 @@ class Janus
     /**
      * Get the full api response for the last request in this cycle.
      *
-     * @param string|null $key
+     * @param  string|null  $key
      * @return mixed|null
      */
     public function getApiResponse(?string $key = null)

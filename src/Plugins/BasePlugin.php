@@ -21,7 +21,7 @@ abstract class BasePlugin implements JanusPlugin
     /**
      * VideoRoom constructor.
      *
-     * @param Janus $janus
+     * @param  Janus  $janus
      */
     public function __construct(Janus $janus)
     {
@@ -109,7 +109,8 @@ abstract class BasePlugin implements JanusPlugin
     /**
      * Check if the plugin response we expect is valid, or bail.
      *
-     * @param string $success
+     * @param  string  $success
+     *
      * @throws JanusPluginException
      */
     protected function bailIfInvalidPluginResponse(string $success = 'success'): void
