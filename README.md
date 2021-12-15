@@ -10,9 +10,6 @@
 
 ### This package provides a client to fluently interact with your [Janus Gateway Server][link-janus]
 
-## Notes
-- More plugin support will be added soon.
-
 ## Included
 - Core REST API wrapper to interact with janus.
 - VideoRoom plugin wrapper.
@@ -53,13 +50,13 @@ $room = Janus::videoRoom()->create([
 ### Via Composer
 
 ``` bash
-$ composer require rtippin/janus-client
+composer require rtippin/janus-client
 ```
 
 ### Publish the config file
 
 ``` bash
-$ php artisan vendor:publish --tag=janus
+php artisan vendor:publish --tag=janus
 ```
 
 ---
