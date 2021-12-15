@@ -22,6 +22,7 @@ use RTippin\Janus\Server;
  * @method static \RTippin\Janus\Janus trickleCandidate(string $candidate)
  *
  * @mixin \RTippin\Janus\Janus
+ *
  * @see \RTippin\Janus\Janus
  */
 class Janus extends Facade

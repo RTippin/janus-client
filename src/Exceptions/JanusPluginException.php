@@ -9,7 +9,7 @@ class JanusPluginException extends Exception
     /**
      * JanusPluginException constructor.
      *
-     * @param string $message
+     * @param  string  $message
      */
     public function __construct(string $message = 'Janus Plugin Failed.')
     {

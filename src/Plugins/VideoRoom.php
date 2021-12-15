@@ -9,6 +9,7 @@ use RTippin\Janus\Janus;
 
 /**
  * Janus Videoroom Plugin.
+ *
  * @link https://janus.conf.meetecho.com/docs/videoroom.html
  */
 class VideoRoom extends BasePlugin
@@ -21,7 +22,7 @@ class VideoRoom extends BasePlugin
     /**
      * VideoRoom constructor.
      *
-     * @param Janus $janus
+     * @param  Janus  $janus
      */
     public function __construct(Janus $janus)
     {
@@ -47,7 +48,7 @@ class VideoRoom extends BasePlugin
     }
 
     /**
-     * @param string|null $adminKey
+     * @param  string|null  $adminKey
      * @return $this
      */
     public function setAdminKey(?string $adminKey): self
@@ -61,6 +62,7 @@ class VideoRoom extends BasePlugin
      * List all Video Rooms we have in this janus server.
      *
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function list(): array
@@ -77,8 +79,9 @@ class VideoRoom extends BasePlugin
     /**
      * Check if janus has a video room with ID.
      *
-     * @param int $room
+     * @param  int  $room
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function exists(int $room): array
@@ -98,10 +101,11 @@ class VideoRoom extends BasePlugin
     /**
      * Create a new video room, overriding properties you want to set.
      *
-     * @param array $params
-     * @param bool $usePin
-     * @param bool $useSecret
+     * @param  array  $params
+     * @param  bool  $usePin
+     * @param  bool  $useSecret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function create(array $params = [],
@@ -138,10 +142,11 @@ class VideoRoom extends BasePlugin
     /**
      * Edit an existing video room's properties.
      *
-     * @param int $room
-     * @param array $params
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  array  $params
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function edit(int $room,
@@ -166,11 +171,12 @@ class VideoRoom extends BasePlugin
     /**
      * Configure whether to check tokens or add/remove people who can join a room.
      *
-     * @param int $room
-     * @param string $action
-     * @param array|null $allowed
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  string  $action
+     * @param  array|null  $allowed
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function allowed(int $room,
@@ -196,10 +202,11 @@ class VideoRoom extends BasePlugin
     /**
      * Kick a participant from a room using their private janus participant ID.
      *
-     * @param int $room
-     * @param int $participantID
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  int  $participantID
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function kick(int $room,
@@ -223,8 +230,9 @@ class VideoRoom extends BasePlugin
     /**
      * Get a list of the participants in a specific room.
      *
-     * @param int $room
+     * @param  int  $room
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function listParticipants(int $room): array
@@ -244,9 +252,10 @@ class VideoRoom extends BasePlugin
     /**
      * List all the forwarders in a specific room.
      *
-     * @param int $room
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function listForwarders(int $room, ?string $secret = null): array
@@ -267,9 +276,10 @@ class VideoRoom extends BasePlugin
     /**
      * Destroy a room given the room ID and optional secret.
      *
-     * @param int $room
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function destroy(int $room, ?string $secret = null): array
@@ -290,12 +300,13 @@ class VideoRoom extends BasePlugin
     /**
      * Moderate by muting/un-muting a participants stream.
      *
-     * @param int $room
-     * @param int $participantID
-     * @param bool $mute
-     * @param string|null $mid
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  int  $participantID
+     * @param  bool  $mute
+     * @param  string|null  $mid
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException|JanusPluginException
      */
     public function moderate(int $room,
@@ -323,10 +334,11 @@ class VideoRoom extends BasePlugin
     /**
      * Enable or disable recording on all participants for the given room.
      *
-     * @param int $room
-     * @param bool $record
-     * @param string|null $secret
+     * @param  int  $room
+     * @param  bool  $record
+     * @param  string|null  $secret
      * @return array
+     *
      * @throws JanusApiException
      * @throws JanusPluginException
      */

@@ -33,7 +33,7 @@ interface JanusPlugin
     /**
      * Get the last API payload from the parent server instance.
      *
-     * @param string|null $key
+     * @param  string|null  $key
      * @return mixed|null
      */
     public function getPluginPayload(?string $key = null);
@@ -58,8 +58,9 @@ interface JanusPlugin
     /**
      * Disconnect from the server if enabled or forced.
      *
-     * @param bool $force
+     * @param  bool  $force
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function disconnect(bool $force = false);
@@ -67,8 +68,9 @@ interface JanusPlugin
     /**
      * Emit our message, initiating a connection/attachment if needed.
      *
-     * @param array $message
+     * @param  array  $message
      * @return $this
+     *
      * @throws JanusApiException
      */
     public function emit(array $message);

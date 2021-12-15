@@ -95,7 +95,7 @@ class Server
     }
 
     /**
-     * @param string|null $serverEndpoint
+     * @param  string|null  $serverEndpoint
      * @return $this
      */
     public function setServerEndpoint(?string $serverEndpoint): self
@@ -106,7 +106,7 @@ class Server
     }
 
     /**
-     * @param string|null $adminServerEndpoint
+     * @param  string|null  $adminServerEndpoint
      * @return $this
      */
     public function setAdminServerEndpoint(?string $adminServerEndpoint): self
@@ -117,7 +117,7 @@ class Server
     }
 
     /**
-     * @param string|null $apiSecret
+     * @param  string|null  $apiSecret
      * @return $this
      */
     public function setApiSecret(?string $apiSecret): self
@@ -128,7 +128,7 @@ class Server
     }
 
     /**
-     * @param bool $verifySSL
+     * @param  bool  $verifySSL
      * @return $this
      */
     public function setVerifySSL(bool $verifySSL): self
@@ -139,7 +139,7 @@ class Server
     }
 
     /**
-     * @param bool $debug
+     * @param  bool  $debug
      * @return Server
      */
     public function setDebug(bool $debug): self
@@ -150,7 +150,7 @@ class Server
     }
 
     /**
-     * @param int|null $sessionId
+     * @param  int|null  $sessionId
      * @return $this
      */
     public function setSessionId(?int $sessionId): self
@@ -161,7 +161,7 @@ class Server
     }
 
     /**
-     * @param int|null $handleId
+     * @param  int|null  $handleId
      * @return $this
      */
     public function setHandleId(?int $handleId): self
@@ -172,7 +172,7 @@ class Server
     }
 
     /**
-     * @param string|null $plugin
+     * @param  string|null  $plugin
      * @return $this
      */
     public function setPlugin(?string $plugin): self
@@ -199,7 +199,7 @@ class Server
     }
 
     /**
-     * @param string|null $key
+     * @param  string|null  $key
      * @return mixed|null
      */
     public function getApiPayload(?string $key = null)
@@ -228,7 +228,7 @@ class Server
     /**
      * Get the full api response.
      *
-     * @param string|null $key
+     * @param  string|null  $key
      * @return mixed|null
      */
     public function getApiResponse(?string $key = null)
@@ -265,9 +265,10 @@ class Server
     /**
      * Send a POST request to the janus gateway.
      *
-     * @param array $data
-     * @param bool $admin
+     * @param  array  $data
+     * @param  bool  $admin
      * @return array
+     *
      * @throws JanusApiException
      */
     public function post(array $data, bool $admin = false): array
@@ -303,9 +304,10 @@ class Server
     /**
      * Send a GET request to the janus gateway.
      *
-     * @param string|null $route
-     * @param bool $admin
+     * @param  string|null  $route
+     * @param  bool  $admin
      * @return array
+     *
      * @throws JanusApiException
      */
     public function get(?string $route = null, bool $admin = false): array
@@ -339,8 +341,8 @@ class Server
      * Generate the URI we will use for this
      * request cycle to the janus gateway.
      *
-     * @param bool $admin
-     * @param string|null $route
+     * @param  bool  $admin
+     * @param  string|null  $route
      * @return string
      */
     private function generateUri(bool $admin = false, ?string $route = null): string
@@ -357,8 +359,9 @@ class Server
      * If janus gateway call succeeded, we will check the response
      * for janus specific errors, and bail if errors are found.
      *
-     * @param array $response
-     * @param string $uri
+     * @param  array  $response
+     * @param  string  $uri
+     *
      * @throws JanusApiException
      */
     private function bailIfResponseHasJanusError(array $response, string $uri): void
@@ -391,7 +394,7 @@ class Server
     }
 
     /**
-     * @param array|null $response
+     * @param  array|null  $response
      */
     private function dumpIfDebugEnabled(?array $response): void
     {
