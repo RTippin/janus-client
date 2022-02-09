@@ -10,6 +10,13 @@
 
 ### This package provides a client to fluently interact with your [Janus Gateway Server][link-janus]
 
+### Prerequisites
+
+| Laravel |         PHP          | janus-client |
+|---------|:--------------------:|-------------:|
+| `8.x`   | `^7.4` `^8.0` `^8.1` |   `<= 1.0.0` |
+| `9.x`   |   `^8.0.2` `^8.1`    |   `>= 1.1.0` |
+
 ## Included
 - Core REST API wrapper to interact with janus.
 - VideoRoom plugin wrapper.
