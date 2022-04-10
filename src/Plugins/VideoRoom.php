@@ -344,13 +344,14 @@ class VideoRoom extends BasePlugin
      */
     public function enableRecording(int $room,
                                     bool $record,
-                                    ?string $secret = null): array
+                                    ?string $secret = null, ?string $pin = null): array
     {
         $this->emit([
             'request' => 'enable_recording',
             'room' => $room,
             'record' => $record,
             'secret' => $secret ?: '',
+            'pin'    => $pin ?: '',
         ])->bailIfInvalidPluginResponse();
 
         $recording = $this->getPluginResponse();
