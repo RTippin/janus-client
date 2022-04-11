@@ -337,14 +337,15 @@ class VideoRoom extends BasePlugin
      * @param  int  $room
      * @param  bool  $record
      * @param  string|null  $secret
+     * @param  string|null  $pin
      * @return array
      *
-     * @throws JanusApiException
-     * @throws JanusPluginException
+     * @throws JanusApiException|JanusPluginException
      */
     public function enableRecording(int $room,
                                     bool $record,
-                                    ?string $secret = null, ?string $pin = null): array
+                                    ?string $secret = null,
+                                    ?string $pin = null): array
     {
         $this->emit([
             'request' => 'enable_recording',
