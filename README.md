@@ -414,8 +414,8 @@ Janus::disconnect();
 [link-author]: https://github.com/rtippin
 [ico-version]: https://img.shields.io/packagist/v/rtippin/janus-client.svg?style=plastic&cacheSeconds=3600
 [ico-downloads]: https://img.shields.io/packagist/dt/rtippin/janus-client.svg?style=plastic&cacheSeconds=3600
-[link-test]: https://img.shields.io/github/actions/workflow/status/rtippin/janus-client/test.yml?branch=master&style=plastic
-[ico-test]: https://img.shields.io/github/workflow/status/rtippin/janus-client/tests?style=plastic
+[link-test]: https://github.com/RTippin/janus-client/actions
+[ico-test]: https://img.shields.io/github/actions/workflow/status/rtippin/janus-client/test.yml?branch=master&style=plastic
 [ico-styleci]: https://styleci.io/repos/387571926/shield?style=plastic&cacheSeconds=3600
 [ico-license]: https://img.shields.io/github/license/RTippin/janus-client?style=plastic
 [link-packagist]: https://packagist.org/packages/rtippin/janus-client
