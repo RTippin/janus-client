@@ -352,7 +352,7 @@ class VideoRoom extends BasePlugin
             'room' => $room,
             'record' => $record,
             'secret' => $secret ?: '',
-            'pin'    => $pin ?: '',
+            'pin' => $pin ?: '',
         ])->bailIfInvalidPluginResponse();
 
         $recording = $this->getPluginResponse();
